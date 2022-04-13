@@ -108,6 +108,13 @@ Changes
 - Updated to Admin UI 1.21.0, which improves console highlighting by adding
   various keywords and data types.
 
+.. vale off
+
+- Added `concat_ws` scalar function which allows concatenation with a custom
+  separator.
+
+.. vale on
+
 Fixes
 =====
 
