@@ -51,6 +51,7 @@ import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.IndexScopedSettings;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
 import org.elasticsearch.repositories.RepositoriesService;
 import org.elasticsearch.snapshots.RestoreInfo;
 import org.elasticsearch.snapshots.RestoreService;
@@ -254,6 +255,15 @@ public class LogicalReplicationService implements ClusterStateListener, Closeabl
         return getPublicationState(subscriptionName, subscription.publications(), subscription.connectionInfo())
             .thenCompose(
                 stateResponse -> {
+//                    if (stateResponse.concreteIndices().isEmpty() && stateResponse.concreteTemplates().isEmpty()) {
+//                        /*
+//                         When a cluster subscribed to a publication with ALL TABLES = true
+//                         but there is nothing to replicate yet, we need to return false in order to
+//                         keep retrieving remote publication state.
+//                         Otherwise, metadata tracking starts even if there is nothing to track.
+//                         */
+//                        return CompletableFuture.completedFuture(false);
+//                    }
                     verifyTablesDoNotExist(subscriptionName, stateResponse);
                     return restore(
                         subscriptionName,
