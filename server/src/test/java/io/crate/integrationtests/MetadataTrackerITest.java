@@ -152,8 +152,8 @@ public class MetadataTrackerITest extends LogicalReplicationITestCase {
 
     @Test
     public void test_new_empty_partitioned_table_is_replicated() throws Exception {
-        executeOnPublisher("CREATE TABLE t1 (id INT)");
-        createPublication("pub1", true, List.of("t1"));
+        //executeOnPublisher("CREATE TABLE t1 (id INT)");
+        createPublication("pub1", true, List.of());
         createSubscription("sub1", "pub1");
 
         // Ensure tracker has started
