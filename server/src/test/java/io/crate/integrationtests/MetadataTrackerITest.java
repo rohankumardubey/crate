@@ -297,6 +297,39 @@ public class MetadataTrackerITest extends LogicalReplicationITestCase {
         });
     }
 
+    @Test
+    public void test_replicated_table_dropped_on_a_subscriber_replication_stops() throws Exception {
+        executeOnPublisher("CREATE TABLE t1 (id INT)");
+        executeOnPublisher("INSERT INTO t1 (id) VALUES (1), (2)");
+        createPublication("pub1", true, List.of("t1"));
+        createSubscription("sub1", "pub1");
+
+        // Ensure tracker has started
+        assertBusy(() -> assertThat(isTrackerActive(), is(true)));
+
+        // Wait until table is replicated
+        assertBusy(() -> {
+            executeOnSubscriber("REFRESH TABLE t1");
+            var r = executeOnSubscriber("SELECT id FROM t1 ORDER BY id");
+            assertThat(printedTable(r.rows()), is(
+                "1\n" +
+                    "2\n"));
+
+        });
+
+        executeOnSubscriber("DROP TABLE t1");
+        // throws excetion
+        // The relation "doc.t1" doesn't allow DROP operations, because it is included in a logical replication.
+        // which is good
+
+        assertBusy(() -> {
+            var r = executeOnSubscriber("SELECT column_name FROM information_schema.columns" +
+                " WHERE table_name = 't1'" +
+                " ORDER BY ordinal_position");
+            assertThat(r.rowCount(), is(0L));
+        });
+    }
+
     private boolean isTrackerActive() throws Exception {
         var replicationService = subscriberCluster.getInstance(LogicalReplicationService.class, subscriberCluster.getMasterName());
         Field m = replicationService.getClass().getDeclaredField("metadataTracker");
