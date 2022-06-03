@@ -103,7 +103,7 @@ public class GroupingProjector implements Projector {
     private static void ensureAllTypesSupported(Iterable<? extends Symbol> keys) {
         for (Symbol key : keys) {
             DataType type = key.valueType();
-            if (type instanceof ArrayType || type.equals(DataTypes.UNDEFINED)) {
+            if (type instanceof ArrayType) {
                 throw new UnsupportedOperationException("Cannot GROUP BY type: " + type);
             }
         }

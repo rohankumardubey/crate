@@ -21,11 +21,15 @@
 
 package io.crate.integrationtests;
 
-import io.crate.data.ArrayBucket;
-import io.crate.data.Paging;
-import io.crate.testing.SQLResponse;
-import io.crate.testing.TestingHelpers;
-import io.crate.testing.UseJdbc;
+import static com.carrotsearch.randomizedtesting.RandomizedTest.randomAsciiLettersOfLength;
+import static io.crate.testing.TestingHelpers.printedTable;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.not;
+
+import java.util.Arrays;
+
 import org.elasticsearch.test.ESIntegTestCase;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
@@ -33,14 +37,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
-import java.util.Arrays;
-
-import static com.carrotsearch.randomizedtesting.RandomizedTest.randomAsciiLettersOfLength;
-import static io.crate.testing.TestingHelpers.printedTable;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.isIn;
-import static org.hamcrest.Matchers.not;
+import io.crate.data.ArrayBucket;
+import io.crate.data.Paging;
+import io.crate.testing.SQLResponse;
+import io.crate.testing.TestingHelpers;
+import io.crate.testing.UseJdbc;
 
 @ESIntegTestCase.ClusterScope(numDataNodes = 2, numClientNodes = 0, supportsDedicatedMasters = false)
 public class GroupByAggregateTest extends SQLIntegrationTestCase {
@@ -1392,5 +1393,26 @@ public class GroupByAggregateTest extends SQLIntegrationTestCase {
             "021140050C| Rue Paul Doumer | 021140050C| Pt(x=3.426927952095866,y=49.04914998449385)| Brasles\n" +
             "122021430M| Rue Penavayre| 122021430M| Pt(x=2.573608970269561,y=44.35006999410689)| Rodez\n"
         ));
+    }
+
+    @Test
+    public void test_group_by_null_literal() {
+        execute("select null, count(*) from unnest([1, 2]) group by 1");
+        assertThat(TestingHelpers.printedTable(response.rows()), Is.is("NULL| 2\n"));
+    }
+
+    @Test
+    public void test_group_by_null_ordinal() {
+        Assertions.assertThrows(
+            Exception.class,
+            () -> execute("select null, count(*) from unnest([1, 2]) group by null"),
+            "Cannot use NULL in GROUP BY clause"
+        );
+    }
+
+    @Test
+    public void test_union_distinct_with_null_literal() {
+        execute("select null union select null");
+        assertThat(TestingHelpers.printedTable(response.rows()), Is.is("NULL\n"));
     }
 }
