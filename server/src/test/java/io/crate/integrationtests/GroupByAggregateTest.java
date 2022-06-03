@@ -1415,4 +1415,16 @@ public class GroupByAggregateTest extends SQLIntegrationTestCase {
         execute("select null union select null");
         assertThat(TestingHelpers.printedTable(response.rows()), Is.is("NULL\n"));
     }
+
+    @Test
+    public void test_group_by_array_type() {
+        execute("select [1, 2], count(*) from unnest(['a', 'b']) group by 1");
+        assertThat(TestingHelpers.printedTable(response.rows()), Is.is("[1, 2]| 2\n"));
+
+        execute("create table arr (a array(int))");
+        execute("insert into arr(a) values ([1,2]), ([2,3])");
+        refresh();
+        execute("select a, count(*) from arr group by a");
+        assertThat(TestingHelpers.printedTable(response.rows()), Is.is("[1, 2]| 1\n[2, 3]| 1\n"));
+    }
 }
