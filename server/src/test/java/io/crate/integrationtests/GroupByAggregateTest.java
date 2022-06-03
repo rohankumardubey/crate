@@ -1414,6 +1414,14 @@ public class GroupByAggregateTest extends SQLIntegrationTestCase {
     public void test_union_distinct_with_null_literal() {
         execute("select null union select null");
         assertThat(TestingHelpers.printedTable(response.rows()), Is.is("NULL\n"));
+
+        // With alias
+        execute("select NULL as nn from sys.nodes UNION select NULL as nn from sys.nodes");
+        assertThat(printedTable(response.rows()), is("NULL\n"));
+
+        // Without alias
+        execute("select NULL from sys.nodes UNION select NULL from sys.nodes");
+        assertThat(printedTable(response.rows()), is("NULL\n"));
     }
 
     @Test
@@ -1426,5 +1434,17 @@ public class GroupByAggregateTest extends SQLIntegrationTestCase {
         refresh();
         execute("select a, count(*) from arr group by a");
         assertThat(TestingHelpers.printedTable(response.rows()), Is.is("[1, 2]| 1\n[2, 3]| 1\n"));
+    }
+
+    @Test
+    public void test_group_by_of_constant_null() {
+        execute("create table tbl (x int)");
+        execute("insert into tbl (x) values (1), (1), (2), (3)");
+        execute("refresh table tbl");
+
+        response = execute("select nn, sum(x) \n" +
+            "from (select null as nn, x from tbl) t \n" +
+            "group by nn");
+        assertThat(printedTable(response.rows()), Matchers.is("NULL| 7\n"));
     }
 }
