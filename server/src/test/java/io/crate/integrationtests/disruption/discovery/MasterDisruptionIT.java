@@ -21,7 +21,27 @@
 
 package io.crate.integrationtests.disruption.discovery;
 
+<<<<<<< HEAD
 import io.crate.integrationtests.SQLIntegrationTestCase;
+=======
+import static io.crate.metadata.IndexParts.toIndexName;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsAction;
+import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
+>>>>>>> da06dceeb3 (tests: Import `org.junit.Assert.*` methods)
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.admin.indices.stats.ShardStats;
 import org.elasticsearch.cluster.ClusterState;

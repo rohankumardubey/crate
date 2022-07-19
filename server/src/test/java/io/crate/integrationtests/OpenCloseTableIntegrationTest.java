@@ -21,12 +21,15 @@
 
 package io.crate.integrationtests;
 
+<<<<<<< HEAD
 import org.elasticsearch.cluster.metadata.IndexMetadata;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
+=======
+>>>>>>> da06dceeb3 (tests: Import `org.junit.Assert.*` methods)
 import static io.crate.protocols.postgres.PGErrorStatus.INTERNAL_ERROR;
 import static io.crate.protocols.postgres.PGErrorStatus.UNDEFINED_TABLE;
 import static io.crate.testing.Asserts.assertThrowsMatches;
@@ -35,6 +38,15 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.BAD_REQUEST;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import java.util.List;
+
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
+import org.elasticsearch.cluster.metadata.IndexMetadata;
+import org.junit.Before;
+import org.junit.Test;
 
 public class OpenCloseTableIntegrationTest extends SQLIntegrationTestCase {
 

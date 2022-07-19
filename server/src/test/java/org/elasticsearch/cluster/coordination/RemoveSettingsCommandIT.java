@@ -21,7 +21,15 @@
  */
 package org.elasticsearch.cluster.coordination;
 
+<<<<<<< HEAD
 import joptsimple.OptionSet;
+=======
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
+
+>>>>>>> da06dceeb3 (tests: Import `org.junit.Assert.*` methods)
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.cli.MockTerminal;
 import org.elasticsearch.cli.UserException;

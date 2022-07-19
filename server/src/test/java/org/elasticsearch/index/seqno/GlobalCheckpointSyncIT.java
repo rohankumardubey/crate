@@ -19,8 +19,27 @@
 
 package org.elasticsearch.index.seqno;
 
+<<<<<<< HEAD
 import io.crate.common.unit.TimeValue;
 import io.crate.integrationtests.SQLIntegrationTestCase;
+=======
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
+>>>>>>> da06dceeb3 (tests: Import `org.junit.Assert.*` methods)
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
