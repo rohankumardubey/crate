@@ -21,12 +21,8 @@
 
 package io.crate.data;
 
-import io.crate.testing.BatchIteratorTester;
-import io.crate.testing.BatchSimulatingIterator;
-import io.crate.testing.TestingBatchIterators;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,20 +31,25 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import io.crate.testing.BatchIteratorTester;
+import io.crate.testing.BatchSimulatingIterator;
+import io.crate.testing.TestingBatchIterators;
 
 public class CollectingBatchIteratorTest {
 
-    private List<Object[]> expectedResult = Collections.singletonList(new Object[]{45L});
+    private static final List<Object[]> EXPECTED_RESULT = Collections.singletonList(new Object[]{45L});
     private ExecutorService executor;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp() {
         executor = Executors.newFixedThreadPool(2);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         executor.shutdown();
         executor.awaitTermination(5, TimeUnit.SECONDS);
@@ -59,7 +60,7 @@ public class CollectingBatchIteratorTest {
         BatchIteratorTester tester = new BatchIteratorTester(
             () -> CollectingBatchIterator.summingLong(TestingBatchIterators.range(0L, 10L))
         );
-        tester.verifyResultAndEdgeCaseBehaviour(expectedResult);
+        tester.verifyResultAndEdgeCaseBehaviour(EXPECTED_RESULT);
     }
 
     @Test
@@ -69,7 +70,7 @@ public class CollectingBatchIteratorTest {
                 new BatchSimulatingIterator<>(TestingBatchIterators.range(0L, 10L), 2, 5, executor)
             )
         );
-        tester.verifyResultAndEdgeCaseBehaviour(expectedResult);
+        tester.verifyResultAndEdgeCaseBehaviour(EXPECTED_RESULT);
     }
 
     @Test
@@ -81,6 +82,6 @@ public class CollectingBatchIteratorTest {
             () -> loadItemsFuture,
             false);
         loadItemsFuture.completeExceptionally(new RuntimeException());
-        assertThat(collectingBatchIterator.loadNextBatch().toCompletableFuture().isCompletedExceptionally(), is(true));
+        assertThat(collectingBatchIterator.loadNextBatch().toCompletableFuture().isCompletedExceptionally()).isTrue();
     }
 }

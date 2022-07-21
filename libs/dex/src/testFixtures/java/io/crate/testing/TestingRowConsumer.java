@@ -21,6 +21,14 @@
 
 package io.crate.testing;
 
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import io.crate.data.BatchIterator;
 import io.crate.data.BatchIterators;
 import io.crate.data.Bucket;
@@ -29,13 +37,6 @@ import io.crate.data.CollectionBucket;
 import io.crate.data.Row;
 import io.crate.data.RowConsumer;
 import io.crate.exceptions.Exceptions;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public final class TestingRowConsumer implements RowConsumer {
 

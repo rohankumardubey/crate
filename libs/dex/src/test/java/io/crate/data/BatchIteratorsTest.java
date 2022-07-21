@@ -21,8 +21,8 @@
 
 package io.crate.data;
 
-import io.crate.testing.BatchSimulatingIterator;
-import io.crate.testing.FailingBatchIterator;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,30 +36,30 @@ import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import io.crate.testing.BatchSimulatingIterator;
+import io.crate.testing.FailingBatchIterator;
 
 public class BatchIteratorsTest {
 
     @Test
-    public void testExceptionOnAllLoadedIsSetOntoFuture() throws Exception {
+    public void testExceptionOnAllLoadedIsSetOntoFuture() {
         CompletableFuture<Long> future = BatchIterators.collect(
             FailingBatchIterator.failOnAllLoaded(), Collectors.counting());
-        assertThat(future.isCompletedExceptionally(), is(true));
+        assertThat(future.isCompletedExceptionally()).isTrue();
     }
 
 
     @Test
-    public void testBatchBySize() throws Exception {
+    public void testBatchBySize() {
         var batchIterator = InMemoryBatchIterator.of(() -> IntStream.range(0, 5).iterator(), null, false);
         BatchIterator<List<Integer>> batchedIt = BatchIterators.partition(batchIterator, 2, ArrayList::new, List::add, r -> false);
 
-        assertThat(batchedIt.moveNext(), is(true));
-        assertThat(batchedIt.currentElement(), is(Arrays.asList(0, 1)));
-        assertThat(batchedIt.moveNext(), is(true));
-        assertThat(batchedIt.currentElement(), is(Arrays.asList(2, 3)));
-        assertThat(batchedIt.moveNext(), is(true));
-        assertThat(batchedIt.currentElement(), is(Collections.singletonList(4)));
+        assertThat(batchedIt.moveNext()).isTrue();
+        assertThat(batchedIt.currentElement()).containsExactly(0, 1);
+        assertThat(batchedIt.moveNext()).isTrue();
+        assertThat(batchedIt.currentElement()).containsExactly(2, 3);
+        assertThat(batchedIt.moveNext()).isTrue();
+        assertThat(batchedIt.currentElement()).containsExactly(4);
     }
 
     @Test
@@ -73,25 +73,24 @@ public class BatchIteratorsTest {
         BatchIterator<List<Integer>> batchedIt = BatchIterators.partition(batchIterator, 2, ArrayList::new, List::add, r -> false);
 
         CompletableFuture<List<List<Integer>>> future = BatchIterators.collect(batchedIt, Collectors.toList());
-        assertThat(future.get(10, TimeUnit.SECONDS), is(Arrays.asList(
+        assertThat(future.get(10, TimeUnit.SECONDS)).containsExactly(
             Arrays.asList(0, 1),
             Arrays.asList(2, 3),
-            Collections.singletonList(4)
-        )));
+            Collections.singletonList(4));
     }
 
     @Test
-    public void testBatchBySizeWithDynamicLimiter() throws Exception {
+    public void testBatchBySizeWithDynamicLimiter() {
         var batchIterator = InMemoryBatchIterator.of(() -> IntStream.range(0, 5).iterator(), null, false);
         final AtomicInteger rowCount = new AtomicInteger();
         BatchIterator<List<Integer>> batchedIt = BatchIterators.partition(batchIterator, 2, ArrayList::new, List::add,
             r -> rowCount.incrementAndGet() == 3);
 
-        assertThat(batchedIt.moveNext(), is(true));
-        assertThat(batchedIt.currentElement(), is(Arrays.asList(0, 1)));
-        assertThat(batchedIt.moveNext(), is(true));
-        assertThat(batchedIt.currentElement(), is(Collections.singletonList(2)));
-        assertThat(batchedIt.moveNext(), is(true));
-        assertThat(batchedIt.currentElement(), is(Arrays.asList(3, 4)));
+        assertThat(batchedIt.moveNext()).isTrue();
+        assertThat(batchedIt.currentElement()).containsExactly(0, 1);
+        assertThat(batchedIt.moveNext()).isTrue();
+        assertThat(batchedIt.currentElement()).containsExactly(2);
+        assertThat(batchedIt.moveNext()).isTrue();
+        assertThat(batchedIt.currentElement()).containsExactly(3, 4);
     }
 }

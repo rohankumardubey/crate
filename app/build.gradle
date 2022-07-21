@@ -79,6 +79,7 @@ dependencies {
 
     testImplementation(testFixtures(project(':server')))
     testImplementation(testFixtures(project(':libs:dex')))
+    testImplementation "org.assertj:assertj-core:${versions.assertj}"
     testImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${versions.jackson}"
     testImplementation "junit:junit:${versions.junit}"
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine") {

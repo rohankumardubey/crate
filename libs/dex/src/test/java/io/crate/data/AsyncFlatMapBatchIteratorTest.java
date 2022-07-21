@@ -21,9 +21,8 @@
 
 package io.crate.data;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertThat;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.crate.testing.BatchIteratorTester;
 import io.crate.testing.BatchSimulatingIterator;
@@ -54,25 +53,27 @@ public class AsyncFlatMapBatchIteratorTest {
             (x, isLast) -> CompletableFuture.completedFuture(mkIter(new Integer[] {x, x}, new Integer[] {x, x}))
         );
         List<Integer[]> integers = BatchIterators.collect(twiceAsArray, Collectors.toList()).get(1, TimeUnit.SECONDS);
-        assertThat(integers, contains(
+        assertThat(integers).containsExactly(
             new Integer[] {1, 1},
             new Integer[] {1, 1},
             new Integer[] {2, 2},
             new Integer[] {2, 2},
             new Integer[] {3, 3},
-            new Integer[] {3, 3}
-        ));
+            new Integer[] {3, 3});
     }
 
     @Test
-    public void test_async_flatMap_does_not_fail_if_consumer_calls_moveNext_after_negative_moveNext_result() throws Exception {
+    public void test_async_flatMap_does_not_fail_if_consumer_calls_moveNext_after_negative_moveNext_result() {
         InMemoryBatchIterator<Integer> source = new InMemoryBatchIterator<>(Arrays.asList(1, 2, 3), null, false);
         var asyncFlatMap = new AsyncFlatMapBatchIterator<>(
             source,
             (x, isLast) -> CompletableFuture.completedFuture(mkIter(new Integer[] {x, x}, new Integer[] {x, x}))
         );
-        assertThat("first moveNext must return false, because the async-mapper must run next", asyncFlatMap.moveNext(), is(false));
-        assertThat("Calling moveNext again must not fail", asyncFlatMap.moveNext(), is(false));
+        assertThat(asyncFlatMap.moveNext())
+            .as("first moveNext must return false, because the async-mapper must run next").isFalse();
+        assertThat(asyncFlatMap.moveNext())
+            .as("Calling moveNext again must not fail")
+            .isFalse();
     }
 
     @Test
@@ -90,14 +91,13 @@ public class AsyncFlatMapBatchIteratorTest {
                 (x, istLast) -> CompletableFuture.completedFuture(mkIter(new Integer[] {x, x}, new Integer[] {x, x}))
             );
             List<Integer[]> integers = BatchIterators.collect(twiceAsArray, Collectors.toList()).get(1, TimeUnit.SECONDS);
-            assertThat(integers, contains(
+            assertThat(integers).containsExactly(
                 new Integer[] {1, 1},
                 new Integer[] {1, 1},
                 new Integer[] {2, 2},
                 new Integer[] {2, 2},
                 new Integer[] {3, 3},
-                new Integer[] {3, 3}
-            ));
+                new Integer[] {3, 3});
         } finally {
             executorService.shutdown();
             executorService.awaitTermination(5, TimeUnit.SECONDS);
@@ -114,7 +114,7 @@ public class AsyncFlatMapBatchIteratorTest {
         );
         BatchIteratorTester tester = new BatchIteratorTester(() -> {
             BatchIterator<Row> source = TestingBatchIterators.range(1, 4);
-            return new AsyncFlatMapBatchIterator<Row, Row>(source, duplicateRow);
+            return new AsyncFlatMapBatchIterator<>(source, duplicateRow);
         });
         tester.verifyResultAndEdgeCaseBehaviour(
             Arrays.asList(

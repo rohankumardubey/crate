@@ -21,12 +21,13 @@
 
 package io.crate.sql.tree;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.jupiter.api.Test;
 
 public class JoinUsingTests {
 
@@ -41,19 +42,18 @@ public class JoinUsingTests {
             QualifiedName left = QualifiedName.of("doc", "t1");
             QualifiedName right = QualifiedName.of("doc", "t2");
             Expression expr = JoinUsing.toExpression(left, right, cols);
-            Expression e = expr;
             for (int i = 0; i < n - 2; i++) {
-                assertThat(e).isInstanceOf(LogicalBinaryExpression.class);
-                LogicalBinaryExpression and = (LogicalBinaryExpression) e;
+                assertThat(expr).isInstanceOf(LogicalBinaryExpression.class);
+                LogicalBinaryExpression and = (LogicalBinaryExpression) expr;
                 assertThat(and.getLeft()).isInstanceOf(ComparisonExpression.class);
                 assertThat(and.getRight()).isInstanceOf(LogicalBinaryExpression.class);
-                e = and.getRight();
+                expr = and.getRight();
             }
             if (1 == n) {
-                assertThat(e).isInstanceOf(ComparisonExpression.class);
+                assertThat(expr).isInstanceOf(ComparisonExpression.class);
             } else {
-                assertThat(e).isInstanceOf(LogicalBinaryExpression.class);
-                LogicalBinaryExpression and = (LogicalBinaryExpression) e;
+                assertThat(expr).isInstanceOf(LogicalBinaryExpression.class);
+                LogicalBinaryExpression and = (LogicalBinaryExpression) expr;
                 assertThat(and.getLeft()).isInstanceOf(ComparisonExpression.class);
                 assertThat(and.getRight()).isInstanceOf(ComparisonExpression.class);
             }

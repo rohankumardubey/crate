@@ -21,16 +21,8 @@
 
 package io.crate.data.join;
 
-import io.crate.data.BatchIterator;
-import io.crate.data.InMemoryBatchIterator;
-import io.crate.data.Row;
-import io.crate.testing.BatchIteratorTester;
-import io.crate.testing.BatchSimulatingIterator;
-import io.crate.testing.TestingBatchIterators;
-import io.crate.testing.TestingRowConsumer;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import static io.crate.data.SentinelRow.SENTINEL;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,9 +30,16 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static io.crate.data.SentinelRow.SENTINEL;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import io.crate.data.BatchIterator;
+import io.crate.data.InMemoryBatchIterator;
+import io.crate.data.Row;
+import io.crate.testing.BatchIteratorTester;
+import io.crate.testing.BatchSimulatingIterator;
+import io.crate.testing.TestingBatchIterators;
+import io.crate.testing.TestingRowConsumer;
 
 public class NestedLoopBatchIteratorsTest {
 
@@ -55,7 +54,7 @@ public class NestedLoopBatchIteratorsTest {
         return row -> Objects.equals(row.get(0), row.get(1));
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         threeXThreeRows = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
@@ -129,7 +128,7 @@ public class NestedLoopBatchIteratorsTest {
         );
         TestingRowConsumer consumer = new TestingRowConsumer();
         consumer.accept(iterator, null);
-        assertThat(consumer.getResult(), Matchers.empty());
+        assertThat(consumer.getResult()).isEmpty();
     }
 
     @Test
@@ -141,7 +140,7 @@ public class NestedLoopBatchIteratorsTest {
         );
         TestingRowConsumer consumer = new TestingRowConsumer();
         consumer.accept(iterator, null);
-        assertThat(consumer.getResult(), Matchers.empty());
+        assertThat(consumer.getResult()).isEmpty();
     }
 
     @Test
@@ -153,7 +152,7 @@ public class NestedLoopBatchIteratorsTest {
         );
         TestingRowConsumer consumer = new TestingRowConsumer();
         consumer.accept(iterator, null);
-        assertThat(consumer.getResult(), Matchers.empty());
+        assertThat(consumer.getResult()).isEmpty();
     }
 
 
@@ -237,15 +236,15 @@ public class NestedLoopBatchIteratorsTest {
             new CombinedRow(1, 1)
         );
 
-        assertThat(batchIterator.moveNext(), is(true));
-        assertThat(batchIterator.currentElement().get(0), is(0));
-        assertThat(batchIterator.currentElement().get(1), is(10));
+        assertThat(batchIterator.moveNext()).isTrue();
+        assertThat(batchIterator.currentElement().get(0)).isEqualTo(0);
+        assertThat(batchIterator.currentElement().get(1)).isEqualTo(10);
 
         batchIterator.moveToStart();
 
-        assertThat(batchIterator.moveNext(), is(true));
-        assertThat(batchIterator.currentElement().get(0), is(0));
-        assertThat(batchIterator.currentElement().get(1), is(10));
+        assertThat(batchIterator.moveNext()).isTrue();
+        assertThat(batchIterator.currentElement().get(0)).isEqualTo(0);
+        assertThat(batchIterator.currentElement().get(1)).isEqualTo(10);
     }
 
     @Test
@@ -282,7 +281,7 @@ public class NestedLoopBatchIteratorsTest {
         );
         TestingRowConsumer consumer = new TestingRowConsumer();
         consumer.accept(iterator, null);
-        assertThat(consumer.getResult(), Matchers.empty());
+        assertThat(consumer.getResult()).isEmpty();
     }
 
     @Test
@@ -295,7 +294,7 @@ public class NestedLoopBatchIteratorsTest {
         );
         TestingRowConsumer consumer = new TestingRowConsumer();
         consumer.accept(iterator, null);
-        assertThat(consumer.getResult(), Matchers.empty());
+        assertThat(consumer.getResult()).isEmpty();
     }
 
     @Test
@@ -332,7 +331,7 @@ public class NestedLoopBatchIteratorsTest {
         );
         TestingRowConsumer consumer = new TestingRowConsumer();
         consumer.accept(iterator, null);
-        assertThat(consumer.getResult(), Matchers.empty());
+        assertThat(consumer.getResult()).isEmpty();
     }
 
     @Test

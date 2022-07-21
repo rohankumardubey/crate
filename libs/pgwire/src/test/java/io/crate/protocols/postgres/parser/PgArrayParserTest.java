@@ -21,20 +21,18 @@
 
 package io.crate.protocols.postgres.parser;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PgArrayParserTest {
 
@@ -50,112 +48,112 @@ public class PgArrayParserTest {
         }
     };
 
-    private static <T> T parse(String array, Function<byte[], Object> convert) {
-        return (T) PgArrayParser.parse(array, convert);
+    private static <T> List<T> parse(String array, Function<byte[], Object> convert) {
+        return (List<T>) PgArrayParser.parse(array, convert);
     }
 
     @Test
     public void test_string_array() {
-        assertThat(parse("{\"a,\", \"ab\"}", String::new), is(List.of("a,", "ab")));
+        assertThat(parse("{\"a,\", \"ab\"}", String::new)).containsExactly("a,", "ab");
     }
 
     @Test
     public void test_empty_string_array() {
-        assertThat(parse("{}", String::new), is(List.of()));
+        assertThat(parse("{}", String::new)).containsExactly();
     }
 
     @Test
     public void test_string_array_with_null_items() {
-        assertThat(parse("{\"a\", NULL, NULL}", String::new), is(Arrays.asList("a", null, null)));
+        assertThat(parse("{\"a\", NULL, NULL}", String::new)).containsExactly("a", null, null);
     }
 
     @Test
-    public void test_quoted_string_can_contain_curly_brackets() throws Exception {
-        assertThat(parse("{\"}}}{{{\"}", String::new), is(List.of("}}}{{{")));
+    public void test_quoted_string_can_contain_curly_brackets() {
+        assertThat(parse("{\"}}}{{{\"}", String::new)).containsExactly("}}}{{{");
     }
 
     @Test
-    public void test_string_array_with_digits_and_no_quotes() throws Exception {
-        assertThat(parse("{23ab-38cd,42xy}", String::new), is(Arrays.asList("23ab-38cd", "42xy")));
+    public void test_string_array_with_digits_and_no_quotes() {
+        assertThat(parse("{23ab-38cd,42xy}", String::new)).containsExactly("23ab-38cd", "42xy");
     }
 
     @Test
     public void test_dash_and_underline_are_allowed_in_unquoted_strings() {
-        assertThat(parse("{catalog_name,end-exec}", String::new), contains("catalog_name","end-exec"));
+        assertThat(parse("{catalog_name,end-exec}", String::new)).containsExactly("catalog_name", "end-exec");
     }
 
     @Test
     public void test_two_dimensional_string_array() {
         assertThat(
-            parse("{{\"a\", \"b\"}, {\"c\", \"d\"}}", String::new),
-            is(List.of(
+            parse("{{\"a\", \"b\"}, {\"c\", \"d\"}}", String::new))
+            .containsExactly(
                 List.of("a", "b"),
-                List.of("c", "d"))));
+                List.of("c", "d"));
     }
 
     @Test
     public void test_three_dimensional_string_array() {
         assertThat(
-            parse("{{{\"1\",\"2\"},{\"3\",\"4\"}},{{\"5\",\"6\"},{\"7\"}}}", String::new),
-            is(List.of(
+            parse("{{{\"1\",\"2\"},{\"3\",\"4\"}},{{\"5\",\"6\"},{\"7\"}}}", String::new))
+            .containsExactly(
                 List.of(
                     List.of("1", "2"),
                     List.of("3", "4")),
                 List.of(
                     List.of("5", "6"),
-                    List.of("7")))));
+                    List.of("7")));
     }
 
     @Test
     public void test_integer_array() {
-        assertThat(parse("{1, 2}", toInteger), is(List.of(1, 2)));
+        assertThat(parse("{1, 2}", toInteger)).containsExactly(1, 2);
     }
 
     @Test
     public void test_integer_array_with_quoted_items() {
-        assertThat(parse("{\"2\", \"1\"}", toInteger), is(List.of(2, 1)));
+        assertThat(parse("{\"2\", \"1\"}", toInteger)).containsExactly(2, 1);
     }
 
     @Test
     public void test_decimal_array() {
-        assertThat(parse("{-1.1, 2.3}", toDouble), is(List.of(-1.1, 2.3)));
+        assertThat(parse("{-1.1, 2.3}", toDouble)).containsExactly(-1.1, 2.3);
     }
 
     @Test
     public void test_decimal_array_with_quoted_items() {
-        assertThat(parse("{\"1.1\", \"-2.3\"}", toDouble), is(List.of(1.1, -2.3)));
+        assertThat(parse("{\"1.1\", \"-2.3\"}", toDouble)).containsExactly(1.1, -2.3);
     }
 
     @Test
     public void test_bool_array() {
-        assertThat(parse("{true, false}", toBoolean), is(List.of(true, false)));
+        assertThat(parse("{true, false}", toBoolean)).containsExactly(true, false);
     }
 
     @Test
     public void test_bool_array_with_quoted_items() {
-        assertThat(parse("{\"false\",\"true\"}", toBoolean), is(List.of(false, true)));
+        assertThat(parse("{\"false\",\"true\"}", toBoolean)).containsExactly(false, true);
     }
 
     @Test
-    public void test_unquoted_string_can_contain_whitespace() throws Exception {
-        assertThat(parse("{foo bar}", String::new), is(List.of("foo bar")));
+    public void test_unquoted_string_can_contain_whitespace() {
+        assertThat(parse("{foo bar}", String::new)).containsExactly("foo bar");
     }
 
     @Test
-    public void test_unquoted_string_trailing_whitespace_is_removed() throws Exception {
-        assertThat(parse("{foo  }", String::new), is(List.of("foo")));
+    public void test_unquoted_string_trailing_whitespace_is_removed() {
+        assertThat(parse("{foo  }", String::new)).containsExactly("foo");
     }
 
     @Test
-    public void test_unquoted_string_leading_whitespace_is_removed() throws Exception {
-        assertThat(parse("{  foo}", String::new), is(List.of("foo")));
+    public void test_unquoted_string_leading_whitespace_is_removed() {
+        assertThat(parse("{  foo}", String::new)).containsExactly("foo");
     }
 
     @Test
     public void test_json_array() {
         assertThat(
-            parse("{\"{\\\"x\\\": 10.1}\",\"{\\\"y\\\": 20.2}\"}", toMap),
-            is(List.of(Map.of("x", 10.1), Map.of("y", 20.2))));
+            parse("{\"{\\\"x\\\": 10.1}\",\"{\\\"y\\\": 20.2}\"}", toMap))
+            .containsExactly(Map.of("x", 10.1), Map.of("y", 20.2));
     }
 
     @Test
@@ -169,11 +167,12 @@ public class PgArrayParserTest {
                 "   {" +
                 "       \"{\\\"y\\\": 20.2}\", \"{\\\"z\\\": \\\"test\\\"}\"" +
                 "   }" +
-                "}", toMap),
-            is(List.of(
-                List.of(Map.of("x", 10.1)),
-                List.of(Map.of("y", 20.2), Map.of("z", "test")))
-            ));
+                "}", toMap))
+            .containsExactly(
+                List.of(
+                    Map.of("x", 10.1)),
+                List.of(
+                    Map.of("y", 20.2), Map.of("z", "test")));
     }
 
     @Test
@@ -189,29 +188,25 @@ public class PgArrayParserTest {
                 "           \"{\\\"y\\\": 20.2}\", \"{\\\"z\\\": \\\"test\\\"}\"" +
                 "       }" +
                 "   }" +
-                "}", toMap),
-            is(List.of(
+                "}", toMap))
+            .containsExactly(
                 List.of(
-                    List.of(Map.of("x", 10.1)),
-                    List.of(Map.of("y", 20.2), Map.of("z", "test"))))
-            ));
+                    List.of(
+                        Map.of("x", 10.1)),
+                    List.of(Map.of("y", 20.2), Map.of("z", "test"))));
     }
 
     @Test
     public void test_point_format_string_array_parsed_as_string() {
         assertThat(
-            parse("{\"(1.3, 2.1)\", \"(3.4, 5.1)\"}", String::new),
-            is(List.of("(1.3, 2.1)", "(3.4, 5.1)")));
+            parse("{\"(1.3, 2.1)\", \"(3.4, 5.1)\"}", String::new))
+            .containsExactly("(1.3, 2.1)", "(3.4, 5.1)");
     }
 
     @Test
-    public void test_unquoted_item_can_contain_dots() throws Exception {
+    public void test_unquoted_item_can_contain_dots() {
         assertThat(
-            parse("{foo.bar,two}", String::new),
-            is(List.of(
-                "foo.bar",
-                "two"
-            ))
-        );
+            parse("{foo.bar,two}", String::new))
+            .containsExactly("foo.bar", "two");
     }
 }

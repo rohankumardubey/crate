@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.crate.sql.Literals;
 import io.crate.sql.SqlFormatter;
@@ -128,7 +128,7 @@ public class TestStatementBuilder {
     }
 
     @Test
-    public void testSetTransaction() throws Exception {
+    public void testSetTransaction() {
         printStatement("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
         printStatement("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
         printStatement("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
@@ -146,7 +146,7 @@ public class TestStatementBuilder {
     }
 
     @Test
-    public void test_discard_statement_parsing() throws Exception {
+    public void test_discard_statement_parsing() {
         printStatement("DISCARD ALL");
         printStatement("DISCARD PLANS");
         printStatement("DISCARD SEQUENCES");
@@ -1048,7 +1048,7 @@ public class TestStatementBuilder {
     }
 
     @Test
-    public void testStatementBuilderTpch() throws Exception {
+    public void testStatementBuilderTpch() throws IOException {
         printTpchQuery(1, 3);
         printTpchQuery(2, 33, "part type like", "region name");
         printTpchQuery(3, "market segment", "2013-03-05");

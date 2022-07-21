@@ -74,8 +74,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
-import org.apache.lucene.tests.store.BaseDirectoryWrapper;
 import org.apache.lucene.tests.index.CrateRandomIndexWriter;
+import org.apache.lucene.tests.store.BaseDirectoryWrapper;
 import org.apache.lucene.util.SetOnce;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.Version;
@@ -557,7 +557,8 @@ public class RecoverySourceHandlerTests extends ESTestCase {
         when(shard.isRelocatedPrimary()).thenReturn(true);
         when(shard.acquireSafeIndexCommit()).thenReturn(mock(Engine.IndexCommitRef.class));
         doAnswer(invocation -> {
-            ((ActionListener<Releasable>)invocation.getArguments()[0]).onResponse(() -> {});
+            ((ActionListener<Releasable>) invocation.getArguments()[0]).onResponse(() -> {
+            });
             return null;
         }).when(shard).acquirePrimaryOperationPermit(any(), anyString(), any());
 
@@ -746,7 +747,7 @@ public class RecoverySourceHandlerTests extends ESTestCase {
         when(shard.isRelocatedPrimary()).thenReturn(false);
         doAnswer(invocation -> {
             freed.set(false);
-            ((ActionListener<Releasable>)invocation.getArguments()[0]).onResponse(() -> freed.set(true));
+            ((ActionListener<Releasable>) invocation.getArguments()[0]).onResponse(() -> freed.set(true));
             return null;
         }).when(shard).acquirePrimaryOperationPermit(any(), anyString(), any());
 

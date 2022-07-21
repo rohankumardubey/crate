@@ -27,35 +27,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.BitSet;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
-import com.pholser.junit.quickcheck.From;
-import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-
-@RunWith(JUnitQuickcheck.class)
 public class BitStringTest {
-
-    public static class BitStringGen extends Generator<BitString> {
-
-        public BitStringGen() {
-            super(BitString.class);
-        }
-
-        @Override
-        public BitString generate(SourceOfRandomness random, GenerationStatus status) {
-            int length = random.nextInt(3, 6);
-            BitSet bitSet = new BitSet(length);
-            for (int i = 0; i < length; i++) {
-                bitSet.set(i, random.nextBoolean());
-            }
-            return new BitString(bitSet, length);
-        }
-    }
 
     @Test
     public void test_can_parse_bit_string_with_zeros_and_ones() {
@@ -88,7 +62,6 @@ public class BitStringTest {
         assertThat(BitString.ofRawBits("111").compareTo(BitString.ofRawBits("0001")))
             .isEqualTo("111".compareTo("0001"));
     }
-
 
     @Property
     public void test_bitstring_compare_behaves_like_asBitString_compareTo(@From(BitStringGen.class) BitString a,

@@ -21,9 +21,7 @@
 
 package io.crate.data;
 
-import io.crate.testing.BatchIteratorTester;
-import io.crate.testing.TestingBatchIterators;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -32,8 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertThat;
+import org.junit.jupiter.api.Test;
+
+import io.crate.testing.BatchIteratorTester;
+import io.crate.testing.TestingBatchIterators;
 
 public class FlatMapBatchIteratorTest {
 
@@ -44,14 +44,14 @@ public class FlatMapBatchIteratorTest {
             new FlatMapBatchIterator<>(source, x -> Arrays.asList(new Integer[] {x, x}, new Integer[] {x, x}).iterator());
 
         List<Integer[]> integers = BatchIterators.collect(twiceAsArray, Collectors.toList()).get(1, TimeUnit.SECONDS);
-        assertThat(integers, contains(
+        assertThat(integers).containsExactly(
             new Integer[] {1, 1},
             new Integer[] {1, 1},
             new Integer[] {2, 2},
             new Integer[] {2, 2},
             new Integer[] {3, 3},
             new Integer[] {3, 3}
-        ));
+        );
     }
 
     @Test

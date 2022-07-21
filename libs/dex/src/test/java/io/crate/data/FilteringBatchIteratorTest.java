@@ -21,18 +21,20 @@
 
 package io.crate.data;
 
-import io.crate.testing.BatchIteratorTester;
-import io.crate.testing.TestingBatchIterators;
-import org.junit.Test;
 
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.Test;
+
+import io.crate.testing.BatchIteratorTester;
+import io.crate.testing.TestingBatchIterators;
+
 public class FilteringBatchIteratorTest {
 
-    private Predicate<Row> evenRow = row -> (int) row.get(0) % 2 == 0;
+    private static final Predicate<Row> EVEN_ROW = row -> (int) row.get(0) % 2 == 0;
 
     @Test
     public void testFilteringBatchIterator() throws Exception {
@@ -40,7 +42,7 @@ public class FilteringBatchIteratorTest {
             l -> new Object[]{l}).collect(Collectors.toList());
 
         BatchIteratorTester tester = new BatchIteratorTester(
-            () -> new FilteringBatchIterator(TestingBatchIterators.range(0, 20), evenRow));
+            () -> new FilteringBatchIterator<>(TestingBatchIterators.range(0, 20), EVEN_ROW));
         tester.verifyResultAndEdgeCaseBehaviour(expectedResult);
     }
 }
