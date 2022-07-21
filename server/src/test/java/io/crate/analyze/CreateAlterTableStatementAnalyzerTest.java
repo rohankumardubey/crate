@@ -28,6 +28,7 @@ import static io.crate.testing.Asserts.assertThrowsMatches;
 import static io.crate.testing.SQLErrorMatcher.isSQLError;
 import static io.crate.testing.TestingHelpers.mapToSortedString;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.elasticsearch.cluster.metadata.IndexMetadata.INDEX_ROUTING_EXCLUDE_GROUP_SETTING;
 import static org.elasticsearch.index.engine.EngineConfig.INDEX_CODEC_SETTING;
 import static org.hamcrest.Matchers.containsString;
@@ -1408,7 +1409,8 @@ public class CreateAlterTableStatementAnalyzerTest extends CrateDummyClusterServ
     @Test
     public void test_alter_table_update_final_setting_on_closed_table() throws IOException {
         e = SQLExecutor.builder(clusterService).addTable("create table doc.test(i int)").closeTable("test").build();
-        assertThrowsMatches(() -> analyze(e, "alter table test SET (number_of_routing_shards = 5)"),
+        assertThrowsMatches(
+            () -> analyze(e, "alter table test SET (number_of_routing_shards = 5)"),
                             isSQLError(containsString(
                                            "Invalid property \"number_of_routing_shards\" passed to [ALTER | CREATE] TABLE statement"),
                                        INTERNAL_ERROR,
@@ -1544,10 +1546,9 @@ public class CreateAlterTableStatementAnalyzerTest extends CrateDummyClusterServ
 
     @Test
     public void test_create_table_with_invalid_storage_option_errors_with_invalid_property_name() throws Exception {
-        assertThrowsMatches(
-            () -> analyze("create table tbl (name text storage with (foobar = true))"),
-            IllegalArgumentException.class,
-            "Invalid STORAGE WITH option `foobar`"
-        );
+        assertThatThrownBy(
+            () -> analyze("create table tbl (name text storage with (foobar = true))"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid STORAGE WITH option `foobar`");
     }
 }

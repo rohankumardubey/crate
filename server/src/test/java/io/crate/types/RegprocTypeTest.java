@@ -22,6 +22,7 @@
 package io.crate.types;
 
 import static io.crate.types.DataTypes.REGPROC;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -107,10 +108,9 @@ public class RegprocTypeTest extends ESTestCase {
 
     @Test
     public void test_cannot_cast_long_outside_int_range_to_regproc() {
-        Asserts.assertThrowsMatches(
-            () -> RegprocType.INSTANCE.implicitCast(Integer.MAX_VALUE + 2038L),
-            IllegalArgumentException.class,
-            "2147485685 is outside of `int` range and cannot be cast to the regproc type"
-        );
+        assertThatThrownBy(
+            () -> RegprocType.INSTANCE.implicitCast(Integer.MAX_VALUE + 2038L))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("2147485685 is outside of `int` range and cannot be cast to the regproc type");
     }
 }

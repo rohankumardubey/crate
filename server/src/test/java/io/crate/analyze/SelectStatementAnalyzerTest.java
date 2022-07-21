@@ -21,7 +21,6 @@
 
 package io.crate.analyze;
 
-import static io.crate.testing.Asserts.assertThrowsMatches;
 import static io.crate.testing.RelationMatchers.isDocTable;
 import static io.crate.testing.SymbolMatchers.isAlias;
 import static io.crate.testing.SymbolMatchers.isField;
@@ -30,6 +29,7 @@ import static io.crate.testing.SymbolMatchers.isLiteral;
 import static io.crate.testing.SymbolMatchers.isReference;
 import static io.crate.testing.SymbolMatchers.isVoidReference;
 import static io.crate.testing.TestingHelpers.isSQL;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.contains;
@@ -103,7 +103,6 @@ import io.crate.metadata.sys.SysNodesTableInfo;
 import io.crate.sql.parser.ParsingException;
 import io.crate.sql.tree.BitString;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
-import io.crate.testing.Asserts;
 import io.crate.testing.SQLExecutor;
 import io.crate.testing.SymbolMatchers;
 import io.crate.testing.T3;
@@ -2389,11 +2388,10 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
     @Test
     public void test_aliased_table_function_in_group_by_is_prohibited() throws Exception {
         var executor = SQLExecutor.builder(clusterService).build();
-        assertThrowsMatches(
-            () -> executor.analyze("select unnest([1]) as a from sys.cluster group by 1"),
-            IllegalArgumentException.class,
-            "Table functions are not allowed in GROUP BY"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select unnest([1]) as a from sys.cluster group by 1"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Table functions are not allowed in GROUP BY");
     }
 
     @Test
@@ -2689,17 +2687,15 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
             .addTable("CREATE TABLE tbl (a int)")
             .build();
         executor.getSessionContext().setErrorOnUnknownObjectKey(true);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select unknown['u'] from tbl"),
-            ColumnUnknownException.class,
-            "Column unknown['u'] unknown"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select unknown['u'] from tbl"))
+            .isInstanceOf(ColumnUnknownException.class)
+            .hasMessage("Column unknown['u'] unknown");
         executor.getSessionContext().setErrorOnUnknownObjectKey(false);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select unknown['u'] from tbl"),
-            ColumnUnknownException.class,
-            "Column unknown['u'] unknown"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select unknown['u'] from tbl"))
+            .isInstanceOf(ColumnUnknownException.class)
+            .hasMessage("Column unknown['u'] unknown");
     }
 
     @Test
@@ -2716,16 +2712,14 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
             .addTable("CREATE TABLE tbl (obj object, obj_n object as (obj_n2 object))")
             .build();
         executor.getSessionContext().setErrorOnUnknownObjectKey(true);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj['u'] from tbl"),
-            ColumnUnknownException.class,
-            "Column obj['u'] unknown"
-        );
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_n['obj_n2']['u'] from tbl"),
-            ColumnUnknownException.class,
-            "Column obj_n['obj_n2']['u'] unknown"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj['u'] from tbl"))
+            .isInstanceOf(ColumnUnknownException.class)
+            .hasMessage("Column obj['u'] unknown");
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_n['obj_n2']['u'] from tbl"))
+            .isInstanceOf(ColumnUnknownException.class)
+            .hasMessage("Column obj_n['obj_n2']['u'] unknown");
         executor.getSessionContext().setErrorOnUnknownObjectKey(false);
         var analyzed = executor.analyze("select obj['u'] from tbl");
         assertThat(analyzed.outputs().size(), is(1));
@@ -2744,11 +2738,10 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
          */
         var executor = SQLExecutor.builder(clusterService).build();
         executor.getSessionContext().setErrorOnUnknownObjectKey(true);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("SELECT ''::OBJECT['x']"),
-            ColumnUnknownException.class,
-            "The object `{}` does not contain the key `x`"
-        );
+       assertThatThrownBy(
+            () -> executor.analyze("SELECT ''::OBJECT['x']"))
+            .isInstanceOf(ColumnUnknownException.class)
+            .hasMessage("The object `{}` does not contain the key `x`");
         executor.getSessionContext().setErrorOnUnknownObjectKey(false);
         var analyzed = executor.analyze("SELECT ''::OBJECT['x']");
         assertThat(analyzed.outputs().size(), is(1));
@@ -2797,11 +2790,10 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
          * select ('{}'::object).x; --> works
          */
         executor.getSessionContext().setErrorOnUnknownObjectKey(true);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select ('{}'::object).x"),
-            ColumnUnknownException.class,
-            "The object `{}` does not contain the key `x`"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select ('{}'::object).x"))
+            .isInstanceOf(ColumnUnknownException.class)
+            .hasMessage("The object `{}` does not contain the key `x`");
         executor.getSessionContext().setErrorOnUnknownObjectKey(false);
         analyzed = executor.analyze("select ('{}'::object).x");
         assertThat(analyzed.outputs().size(), is(1));
@@ -2830,39 +2822,35 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
             .addTable("CREATE TABLE c2 (obj_dynamic object (dynamic) as (y int))")
             .build();
         executor.getSessionContext().setErrorOnUnknownObjectKey(true);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_dynamic from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_dynamic\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_dynamic from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_dynamic\" is ambiguous");
         var analyzed = executor.analyze("select obj_dynamic['x'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_dynamic['x']"));
         analyzed = executor.analyze("select obj_dynamic['y'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_dynamic['y']"));
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_dynamic['z'] from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_dynamic\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_dynamic['z'] from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_dynamic\" is ambiguous");
         executor.getSessionContext().setErrorOnUnknownObjectKey(false);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_dynamic from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_dynamic\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_dynamic from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_dynamic\" is ambiguous");
         analyzed = executor.analyze("select obj_dynamic['x'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_dynamic['x']"));
         analyzed = executor.analyze("select obj_dynamic['y'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_dynamic['y']"));
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_dynamic['z'] from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_dynamic\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_dynamic['z'] from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_dynamic\" is ambiguous");
     }
 
     @Test
@@ -2887,39 +2875,35 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
             .addTable("CREATE TABLE c2 (obj_strict object (strict) as (y int))")
             .build();
         executor.getSessionContext().setErrorOnUnknownObjectKey(true);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_strict from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_strict\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_strict from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_strict\" is ambiguous");
         var analyzed = executor.analyze("select obj_strict['x'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_strict['x']"));
         analyzed = executor.analyze("select obj_strict['y'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_strict['y']"));
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_strict['z'] from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_strict\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_strict['z'] from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_strict\" is ambiguous");
         executor.getSessionContext().setErrorOnUnknownObjectKey(false);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_strict from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_strict\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_strict from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_strict\" is ambiguous");
         analyzed = executor.analyze("select obj_strict['x'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_strict['x']"));
         analyzed = executor.analyze("select obj_strict['y'] from c1, c2");
         assertThat(analyzed.outputs().size(), is(1));
         assertThat(analyzed.outputs().get(0), isReference("obj_strict['y']"));
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_strict['z'] from c1, c2"),
-            AmbiguousColumnException.class,
-            "Column \"obj_strict\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_strict['z'] from c1, c2"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_strict\" is ambiguous");
     }
 
     @Test
@@ -2941,38 +2925,32 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
             .addTable("CREATE TABLE c4 (obj_ignored object (ignored) as (y int))")
             .build();
         executor.getSessionContext().setErrorOnUnknownObjectKey(true);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_ignored from c3, c4"),
-            AmbiguousColumnException.class,
-            "Column \"obj_ignored\" is ambiguous"
-        );
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_ignored['x'] from c3, c4"),
-            AmbiguousColumnException.class,
-            "Column \"obj_ignored['x']\" is ambiguous"
-        );
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_ignored['y'] from c3, c4"),
-            AmbiguousColumnException.class,
-            "Column \"obj_ignored['y']\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_ignored from c3, c4"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_ignored\" is ambiguous");
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_ignored['x'] from c3, c4"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_ignored['x']\" is ambiguous");
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_ignored['y'] from c3, c4"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_ignored['y']\" is ambiguous");
 
         executor.getSessionContext().setErrorOnUnknownObjectKey(false);
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_ignored from c3, c4"),
-            AmbiguousColumnException.class,
-            "Column \"obj_ignored\" is ambiguous"
-        );
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_ignored['x'] from c3, c4"),
-            AmbiguousColumnException.class,
-            "Column \"obj_ignored['x']\" is ambiguous"
-        );
-        Asserts.assertThrowsMatches(
-            () -> executor.analyze("select obj_ignored['y'] from c3, c4"),
-            AmbiguousColumnException.class,
-            "Column \"obj_ignored['y']\" is ambiguous"
-        );
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_ignored from c3, c4"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_ignored\" is ambiguous");
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_ignored['x'] from c3, c4"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_ignored['x']\" is ambiguous");
+        assertThatThrownBy(
+            () -> executor.analyze("select obj_ignored['y'] from c3, c4"))
+            .isInstanceOf(AmbiguousColumnException.class)
+            .hasMessage("Column \"obj_ignored['y']\" is ambiguous");
     }
 
     @Test

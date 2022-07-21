@@ -29,7 +29,7 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.function.Executable;
 
-public class Asserts {
+public final class Asserts {
 
     public static SettingsAssert assertThat(Settings actual) {
         return new SettingsAssert(actual);

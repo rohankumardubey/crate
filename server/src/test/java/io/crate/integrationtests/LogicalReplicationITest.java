@@ -23,6 +23,7 @@ package io.crate.integrationtests;
 
 import static io.crate.testing.Asserts.assertThrowsMatches;
 import static io.crate.testing.TestingHelpers.printedTable;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertFalse;
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.assertj.core.api.Assertions;
 import org.elasticsearch.cluster.metadata.Metadata;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.hamcrest.Matchers;
@@ -70,11 +72,10 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
         User user = Objects.requireNonNull(userLookup.findUser(publicationOwner), "User " + publicationOwner + " must exist");
 
         executeOnPublisher("DROP USER " + publicationOwner);
-        assertThrowsMatches(
-            () -> executeOnPublisherAsUser("CREATE PUBLICATION pub1 FOR TABLE doc.t1", user),
-            IllegalStateException.class,
-            "Publication 'pub1' cannot be created as the user 'publication_owner' owning the publication has been dropped."
-        );
+        assertThatThrownBy(
+            () -> executeOnPublisherAsUser("CREATE PUBLICATION pub1 FOR TABLE doc.t1", user))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Publication 'pub1' cannot be created as the user 'publication_owner' owning the publication has been dropped.");
     }
 
 
@@ -91,11 +92,10 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
         User user = Objects.requireNonNull(userLookup.findUser(subscriptionOwner), "User " + subscriptionOwner + " must exist");
 
         executeOnSubscriber("DROP USER " + subscriptionOwner);
-        assertThrowsMatches(
-            () -> createSubscriptionAsUser("sub1", "pub1", user),
-            IllegalStateException.class,
-            "Subscription 'sub1' cannot be created as the user 'subscription_owner' owning the subscription has been dropped."
-        );
+        assertThatThrownBy(
+            () -> createSubscriptionAsUser("sub1", "pub1", user))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Subscription 'sub1' cannot be created as the user 'subscription_owner' owning the subscription has been dropped.");
     }
 
     @Test
@@ -111,11 +111,10 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
         User user = Objects.requireNonNull(userLookup.findUser(publicationOwner), "User " + publicationOwner + " must exist");
         executeOnPublisherAsUser("CREATE PUBLICATION pub1 FOR TABLE doc.t1", user);
 
-        assertThrowsMatches(
-            () -> executeOnPublisher("DROP USER " + publicationOwner),
-            IllegalStateException.class,
-            "User 'publication_owner' cannot be dropped. Publication 'pub1' needs to be dropped first."
-        );
+        assertThatThrownBy(
+            () -> executeOnPublisher("DROP USER " + publicationOwner))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("User 'publication_owner' cannot be dropped. Publication 'pub1' needs to be dropped first.");
     }
 
     @Test
@@ -131,11 +130,10 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
         User user = Objects.requireNonNull(userLookup.findUser(subscriptionOwner), "User " + subscriptionOwner + " must exist");
         createSubscriptionAsUser("sub1", "pub1", user);
 
-        assertThrowsMatches(
-            () -> executeOnSubscriber("DROP USER " + subscriptionOwner),
-            IllegalStateException.class,
-            "User 'subscription_owner' cannot be dropped. Subscription 'sub1' needs to be dropped first."
-        );
+        assertThatThrownBy(
+            () -> executeOnSubscriber("DROP USER " + subscriptionOwner))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("User 'subscription_owner' cannot be dropped. Subscription 'sub1' needs to be dropped first.");
     }
 
     @Test
@@ -204,21 +202,17 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
         // createPublication is not used in order not to create SUBSCRIBING_USER and verify that check is done in PublicationsStateAction
         executeOnPublisher("CREATE PUBLICATION pub1 FOR TABLE doc.t1");
 
-        assertThrowsMatches(
-            () -> createSubscription("sub1", "pub1"),
-            Matchers.anyOf(
+        assertThatThrownBy(
+            () -> createSubscription("sub1", "pub1"))
+            .satisfiesAnyOf(
                 // If executing via sniff mode, the user is not found
-                MoreMatchers.exception(
-                    IllegalStateException.class,
-                    "Cannot build publication state, subscribing user '" + SUBSCRIBING_USER + "' was not found."),
-
+                e -> org.assertj.core.api.Assertions.assertThat(e)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Cannot build publication state, subscribing user '" + SUBSCRIBING_USER + "' was not found."),
                 // If executing via pg-tunneling the authentication will fail because of the missing user
-                MoreMatchers.exception(
-                    IllegalStateException.class,
-                    Matchers.containsString("Error response: FATAL, trust authentication failed for user \"subscriber\"")
-                )
-            )
-        );
+                e -> org.assertj.core.api.Assertions.assertThat(e)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Error response: FATAL, trust authentication failed for user \"subscriber\""));
     }
 
     @Test
@@ -241,12 +235,11 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
     @Test
     public void test_subscribing_to_unknown_publication_raises_error() throws Exception {
         createPublication("pub1", true, List.of());
-        assertThrowsMatches(
-            () -> executeOnSubscriber("CREATE SUBSCRIPTION sub1" +
-                " CONNECTION '" + publisherConnectionUrl() + "' publication unknown_pub"),
-            PublicationUnknownException.class,
-            "Publication 'unknown_pub' unknown"
-        );
+        assertThatThrownBy(
+                () -> executeOnSubscriber("CREATE SUBSCRIPTION sub1" +
+                    " CONNECTION '" + publisherConnectionUrl() + "' publication unknown_pub"))
+            .isInstanceOf(PublicationUnknownException.class)
+            .hasMessage("Publication 'unknown_pub' unknown");
     }
 
     @Test
@@ -402,11 +395,10 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
         createPublication("pub1", false, List.of("doc.t1"));
         createSubscription("sub1", "pub1");
 
-        assertThrowsMatches(
-            () -> executeOnSubscriber("INSERT INTO doc.t1 (id) VALUES(3)"),
-            OperationOnInaccessibleRelationException.class,
-            "The relation \"doc.t1\" doesn't allow INSERT operations, because it is included in a logical replication subscription."
-        );
+        assertThatThrownBy(
+ () -> executeOnSubscriber("INSERT INTO doc.t1 (id) VALUES(3)"))
+            .isInstanceOf(OperationOnInaccessibleRelationException.class)
+            .hasMessage("The relation \"doc.t1\" doesn't allow INSERT operations, because it is included in a logical replication subscription.");
     }
 
     @Test
@@ -426,11 +418,10 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
                 "p\n"));
         });
 
-        assertThrowsMatches(
-            () -> executeOnSubscriber("INSERT INTO doc.t1 (id) VALUES(3)"),
-            OperationOnInaccessibleRelationException.class,
-            "The relation \"doc.t1\" doesn't allow INSERT operations, because it is included in a logical replication subscription."
-        );
+        assertThatThrownBy(
+ () -> executeOnSubscriber("INSERT INTO doc.t1 (id) VALUES(3)"))
+            .isInstanceOf(OperationOnInaccessibleRelationException.class)
+            .hasMessage("The relation \"doc.t1\" doesn't allow INSERT operations, because it is included in a logical replication subscription.");
     }
 
     @Test
@@ -557,11 +548,10 @@ public class LogicalReplicationITest extends LogicalReplicationITestCase {
         createPublication("pub1", false, List.of("t1"));
         createSubscription("sub1", "pub1");
 
-        assertThrowsMatches(
-            () -> executeOnSubscriber("DROP TABLE t1"),
-            OperationOnInaccessibleRelationException.class,
-            "The relation \"doc.t1\" doesn't allow DROP operations, because it is included in a logical replication subscription."
-        );
+        assertThatThrownBy(
+ () -> executeOnSubscriber("DROP TABLE t1"))
+            .isInstanceOf(OperationOnInaccessibleRelationException.class)
+            .hasMessage("The relation \"doc.t1\" doesn't allow DROP operations, because it is included in a logical replication subscription.");
     }
 
     /**

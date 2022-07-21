@@ -21,6 +21,7 @@
 
 package io.crate.metadata;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -52,12 +53,10 @@ public class IndexPartsTest {
         assertThat(new IndexParts(schemaTable).isPartitioned(), is(false));
         assertThat(new IndexParts(partitionedTable).isPartitioned(), is(true));
         assertThat(new IndexParts(schemaPartitionedTable).isPartitioned(), is(true));
-        Asserts.assertThrowsMatches(
-            () -> new IndexParts("schema..partitioned."),
-            IllegalArgumentException.class,
-            "Invalid index name: schema",
-            "Should have failed due to invalid index name"
-        );
+        assertThatThrownBy(
+            () -> new IndexParts("schema..partitioned."))
+            .as("Should have failed due to invalid index name")
+            .hasMessage("Invalid index name: schema");
 
         assertThat(IndexParts.isPartitioned(table), is(false));
         assertThat(IndexParts.isPartitioned(schemaTable), is(false));

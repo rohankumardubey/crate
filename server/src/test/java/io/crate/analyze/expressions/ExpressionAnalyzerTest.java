@@ -25,6 +25,7 @@ import static io.crate.testing.SymbolMatchers.isFunction;
 import static io.crate.testing.SymbolMatchers.isLiteral;
 import static io.crate.testing.SymbolMatchers.isReference;
 import static io.crate.testing.TestingHelpers.isSQL;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
@@ -39,6 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.joda.time.Period;
 import org.junit.Before;
 import org.junit.Test;
@@ -126,11 +128,10 @@ public class ExpressionAnalyzerTest extends CrateDummyClusterServiceUnitTest {
             SymbolMatchers.isLiteral(1)
         ));
 
-        Asserts.assertThrowsMatches(
-            () -> executor.asSymbol("o_arr['o_arr_nested']['y'][1][1]"),
-            UnsupportedOperationException.class,
-            "Nested array access is not supported"
-        );
+        assertThatThrownBy(
+            () -> executor.asSymbol("o_arr['o_arr_nested']['y'][1][1]"))
+            .isInstanceOf(UnsupportedOperationException.class)
+            .hasMessage("Nested array access is not supported");
     }
 
     @Test
@@ -417,11 +418,10 @@ public class ExpressionAnalyzerTest extends CrateDummyClusterServiceUnitTest {
         var e = SQLExecutor.builder(clusterService)
             .addTable("create table tbl (obj object as (x int))")
             .build();
-        Asserts.assertThrowsMatches(
-            () -> e.asSymbol("obj = {x = 'foo'}"),
-            ConversionException.class,
-            "Cannot cast object element `x` with value `foo` to type `integer`"
-        );
+        assertThatThrownBy(
+            () -> e.asSymbol("obj = {x = 'foo'}"))
+            .isInstanceOf(ConversionException.class)
+            .hasMessage("Cannot cast object element `x` with value `foo` to type `integer`");
     }
 
     @Test

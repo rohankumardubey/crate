@@ -28,6 +28,7 @@ import static io.crate.testing.SymbolMatchers.isLiteral;
 import static io.crate.testing.SymbolMatchers.isReference;
 import static io.crate.testing.TestingHelpers.isSQL;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -1366,11 +1367,10 @@ public class SelectPlannerTest extends CrateDummyClusterServiceUnitTest {
             .addTable(TableDefinitions.USER_TABLE_DEFINITION)
             .build();
 
-        assertThrowsMatches(
-            () -> e.plan("select id from users where id = 1 and _seq_no = 11"),
-            VersioningValidationException.class,
-            VersioningValidationException.SEQ_NO_AND_PRIMARY_TERM_USAGE_MSG
-        );
+        assertThatThrownBy(
+            () -> e.plan("select id from users where id = 1 and _seq_no = 11"))
+            .isInstanceOf(VersioningValidationException.class)
+            .hasMessage(VersioningValidationException.SEQ_NO_AND_PRIMARY_TERM_USAGE_MSG);
     }
 
     @Test
@@ -1379,11 +1379,10 @@ public class SelectPlannerTest extends CrateDummyClusterServiceUnitTest {
             .addTable(TableDefinitions.USER_TABLE_DEFINITION)
             .build();
 
-        assertThrowsMatches(
-            () -> e.plan("select id from users where _seq_no = 11 and _primary_term = 1"),
-            VersioningValidationException.class,
-            VersioningValidationException.SEQ_NO_AND_PRIMARY_TERM_USAGE_MSG
-        );
+        assertThatThrownBy(
+            () -> e.plan("select id from users where _seq_no = 11 and _primary_term = 1"))
+            .isInstanceOf(VersioningValidationException.class)
+            .hasMessage(VersioningValidationException.SEQ_NO_AND_PRIMARY_TERM_USAGE_MSG);
     }
 
 

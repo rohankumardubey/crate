@@ -21,7 +21,7 @@
 
 package io.crate.replication.logical.engine;
 
-import static io.crate.testing.Asserts.assertThrowsMatches;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.elasticsearch.index.engine.EngineTestCase.newUid;
 import static org.elasticsearch.index.seqno.SequenceNumbers.UNASSIGNED_SEQ_NO;
 
@@ -39,11 +39,10 @@ public class SubscriberEngineTest extends CrateDummyClusterServiceUnitTest {
     @Test
     public void test_operation_validation_with_unassigned_seqno_raises_exception() {
         var op = new Engine.Index(newUid("0"), 0, InternalEngineTests.createParsedDoc("0"));
-        assertThrowsMatches(
-            () -> SubscriberEngine.validate(op),
-            UnsupportedFeatureException.class,
-            "A subscriber engine does not accept operations without an assigned sequence number"
-        );
+        assertThatThrownBy(
+            () -> SubscriberEngine.validate(op))
+            .isInstanceOf(UnsupportedFeatureException.class)
+            .hasMessage("A subscriber engine does not accept operations without an assigned sequence number");
     }
 
     @Test
@@ -60,10 +59,9 @@ public class SubscriberEngineTest extends CrateDummyClusterServiceUnitTest {
                                   false,
                                   UNASSIGNED_SEQ_NO,
                                   0);
-        assertThrowsMatches(
-            () -> SubscriberEngine.validate(op),
-            IllegalStateException.class,
-            "Invalid version_type in a subscriber engine; version_type=INTERNAL origin=PRIMARY"
-        );
+        assertThatThrownBy(
+            () -> SubscriberEngine.validate(op))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Invalid version_type in a subscriber engine; version_type=INTERNAL origin=PRIMARY");
     }
 }

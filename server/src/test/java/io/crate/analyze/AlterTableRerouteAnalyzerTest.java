@@ -21,7 +21,7 @@
 
 package io.crate.analyze;
 
-import static io.crate.testing.Asserts.assertThrowsMatches;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -113,9 +113,10 @@ public class AlterTableRerouteAnalyzerTest extends CrateDummyClusterServiceUnitT
 
     @Test
     public void testRerouteMoveShardWithNullShardId() {
-        assertThrowsMatches(() -> analyze("ALTER TABLE users REROUTE MOVE SHARD null FROM 'n2' TO 'n1'"),
-                            IllegalArgumentException.class,
-                            "Shard Id cannot be [null]");
+        assertThatThrownBy(
+            () -> analyze("ALTER TABLE users REROUTE MOVE SHARD null FROM 'n2' TO 'n1'"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Shard Id cannot be [null]");
     }
 
     @Test
@@ -155,9 +156,10 @@ public class AlterTableRerouteAnalyzerTest extends CrateDummyClusterServiceUnitT
 
     @Test
     public void testRerouteAllocateReplicaShardWithNullShardId() {
-        assertThrowsMatches(() -> analyze("ALTER TABLE users REROUTE ALLOCATE REPLICA SHARD null ON 'n1'"),
-                            IllegalArgumentException.class,
-                            "Shard Id cannot be [null]");
+        assertThatThrownBy(
+            () -> analyze("ALTER TABLE users REROUTE ALLOCATE REPLICA SHARD null ON 'n1'"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Shard Id cannot be [null]");
     }
 
     @Test
@@ -182,9 +184,10 @@ public class AlterTableRerouteAnalyzerTest extends CrateDummyClusterServiceUnitT
 
     @Test
     public void testRerouteCancelShardWithNullShardId() {
-        assertThrowsMatches(() -> analyze("ALTER TABLE users REROUTE CANCEL SHARD null ON 'n2'"),
-                            IllegalArgumentException.class,
-                            "Shard Id cannot be [null]");
+        assertThatThrownBy(
+            () -> analyze("ALTER TABLE users REROUTE CANCEL SHARD null ON 'n2'"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Shard Id cannot be [null]");
     }
 
     @Test
@@ -225,9 +228,10 @@ public class AlterTableRerouteAnalyzerTest extends CrateDummyClusterServiceUnitT
     }
 
     public void test_promote_replica_shard_with_null_shardId() {
-        assertThrowsMatches(() -> analyze("ALTER TABLE users REROUTE PROMOTE REPLICA SHARD null ON 'n1'"),
-            IllegalArgumentException.class,
-            "Shard Id cannot be [null]");
+        assertThatThrownBy(
+            () -> analyze("ALTER TABLE users REROUTE PROMOTE REPLICA SHARD null ON 'n1'"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Shard Id cannot be [null]");
     }
 
     @Test

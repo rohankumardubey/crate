@@ -21,6 +21,7 @@
 
 package io.crate.planner;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
@@ -103,7 +104,7 @@ public class PlannerTest extends CrateDummyClusterServiceUnitTest {
     @Test
     public void test_invalid_any_param_leads_to_clear_error_message() throws Exception {
         LogicalPlan plan = e.logicalPlan("select name = ANY(?) from sys.cluster");
-        Asserts.assertThrowsMatches(
+        assertThatThrownBy(
             () -> {
                 LogicalPlanner.getNodeOperationTree(
                     plan,
@@ -112,9 +113,8 @@ public class PlannerTest extends CrateDummyClusterServiceUnitTest {
                     new Row1("foo"),
                     SubQueryResults.EMPTY
                 );
-            },
-            ConversionException.class,
-            "Cannot cast value `foo` to type `text_array`"
-        );
+            })
+            .isInstanceOf(ConversionException.class)
+            .hasMessage("Cannot cast value `foo` to type `text_array`");
     }
 }

@@ -23,6 +23,7 @@ package io.crate.protocols.postgres.types;
 
 import static io.crate.testing.Asserts.assertThrowsMatches;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -64,8 +65,9 @@ public class DateTypeTest extends BasePGTypeTest<Long> {
 
     @Test
     public void testDecodeUTF8TextWithUnexpectedFormat() {
-        assertThrowsMatches(() -> DateType.INSTANCE.decodeUTF8Text("2016.06.28".getBytes(UTF_8)),
-            DateTimeParseException.class, "");
+        assertThatThrownBy(
+            () -> DateType.INSTANCE.decodeUTF8Text("2016.06.28".getBytes(UTF_8)))
+            .isInstanceOf(DateTimeParseException.class);
     }
 
     @Test

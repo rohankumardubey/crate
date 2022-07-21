@@ -21,6 +21,7 @@
 
 package io.crate.protocols.postgres;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isOneOf;
@@ -74,7 +75,6 @@ import io.crate.execution.support.ActionExecutor;
 import io.crate.planner.DependencyCarrier;
 import io.crate.protocols.postgres.types.PGTypes;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
-import io.crate.testing.Asserts;
 import io.crate.testing.SQLExecutor;
 import io.crate.types.DataTypes;
 import io.crate.user.User;
@@ -697,12 +697,11 @@ public class PostgresWireProtocolTest extends CrateDummyClusterServiceUnitTest {
         assertThat(capturedKillJobRequest.innerRequest().toKill(), is(List.of(targetJobID)));
 
         assertThat(channel.isOpen(), is(false));
-        Asserts.assertThrowsMatches(
+        assertThatThrownBy(
             // implicitly verifies that cancelling did not affect the internal map hence the original session
-            () -> pgSessions.add(keyData, targetSession),
-            AssertionError.class,
-            "The given KeyData already has an associated active Session"
-        );
+            () -> pgSessions.add(keyData, targetSession))
+            .isInstanceOf(AssertionError.class)
+            .hasMessage("The given KeyData already has an associated active Session");
 
         verify(targetSession).resetDeferredExecutions();
         verify(targetSession, times(0)).close();
