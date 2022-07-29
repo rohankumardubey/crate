@@ -308,5 +308,5 @@ task generateLicenseNotes() {
 }
 
 wrapper {
-    gradleVersion = '7.4.1'
+    gradleVersion = '7.5'
 }
