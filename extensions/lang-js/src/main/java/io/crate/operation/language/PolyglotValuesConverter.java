@@ -40,6 +40,7 @@ class PolyglotValuesConverter {
 
     private static final TypeLiteral<Number> NUMBER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    @SuppressWarnings("rawtypes")
     private static final TypeLiteral<Map> MAP_TYPE_LITERAL = new TypeLiteral<>() {
     };
 

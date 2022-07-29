@@ -37,7 +37,6 @@ import io.crate.analyze.relations.AbstractTableRelation;
 import io.crate.analyze.relations.DocTableRelation;
 import io.crate.common.collections.Iterables;
 import io.crate.common.collections.Lists2;
-import io.crate.common.collections.Tuple;
 import io.crate.expression.eval.EvaluatingNormalizer;
 import io.crate.expression.reference.partitioned.PartitionExpression;
 import io.crate.expression.symbol.Literal;
@@ -112,7 +111,7 @@ public class WhereClauseAnalyzer {
             nodeCtx, RowGranularity.PARTITION, partitionReferenceResolver, null);
 
         Symbol normalized;
-        Map<Symbol, List<Literal>> queryPartitionMap = new HashMap<>();
+        Map<Symbol, List<Literal<?>>> queryPartitionMap = new HashMap<>();
 
         for (PartitionName partitionName : tableInfo.partitions()) {
             for (PartitionExpression partitionExpression : partitionReferenceResolver.expressions()) {
@@ -127,17 +126,13 @@ public class WhereClauseAnalyzer {
 
             boolean canMatch = WhereClause.canMatch(normalized);
             if (canMatch) {
-                List<Literal> partitions = queryPartitionMap.get(normalized);
-                if (partitions == null) {
-                    partitions = new ArrayList<>();
-                    queryPartitionMap.put(normalized, partitions);
-                }
+                List<Literal<?>> partitions = queryPartitionMap.computeIfAbsent(normalized, k -> new ArrayList<>());
                 partitions.add(Literal.of(partitionName.asIndexName()));
             }
         }
 
         if (queryPartitionMap.size() == 1) {
-            Map.Entry<Symbol, List<Literal>> entry = Iterables.getOnlyElement(queryPartitionMap.entrySet());
+            Map.Entry<Symbol, List<Literal<?>>> entry = Iterables.getOnlyElement(queryPartitionMap.entrySet());
             return new PartitionResult(
                 entry.getKey(), Lists2.map(entry.getValue(), literal -> nullOrString(literal.value())));
         } else if (queryPartitionMap.size() > 0) {
@@ -155,7 +150,7 @@ public class WhereClauseAnalyzer {
 
     @Nullable
     private static PartitionResult tieBreakPartitionQueries(EvaluatingNormalizer normalizer,
-                                                            Map<Symbol, List<Literal>> queryPartitionMap,
+                                                            Map<Symbol, List<Literal<?>>> queryPartitionMap,
                                                             CoordinatorTxnCtx coordinatorTxnCtx) throws UnsupportedOperationException {
         /*
          * Got multiple normalized queries which all could match.
@@ -179,26 +174,28 @@ public class WhereClauseAnalyzer {
          * If there is still more than 1 query that can match it's not possible to execute the query :(
          */
 
-        List<Tuple<Symbol, List<Literal>>> canMatch = new ArrayList<>();
-        for (Map.Entry<Symbol, List<Literal>> entry : queryPartitionMap.entrySet()) {
+        List<SymbolList> canMatch = new ArrayList<>();
+        for (Map.Entry<Symbol, List<Literal<?>>> entry : queryPartitionMap.entrySet()) {
             Symbol query = entry.getKey();
-            List<Literal> partitions = entry.getValue();
+            List<Literal<?>> partitions = entry.getValue();
             Symbol normalized = normalizer.normalize(ScalarsAndRefsToTrue.rewrite(query), coordinatorTxnCtx);
             assert normalized instanceof Literal :
                 "after normalization and replacing all reference occurrences with true there must only be a literal left";
 
-            Object value = ((Literal) normalized).value();
+            Object value = ((Literal<?>) normalized).value();
             if (value != null && (Boolean) value) {
-                canMatch.add(new Tuple<>(query, partitions));
+                canMatch.add(new SymbolList(query, partitions));
             }
         }
         if (canMatch.size() == 1) {
-            Tuple<Symbol, List<Literal>> symbolListTuple = canMatch.get(0);
+            SymbolList symbolListTuple = canMatch.get(0);
             return new PartitionResult(
-                symbolListTuple.v1(),
-                Lists2.map(symbolListTuple.v2(), literal -> nullOrString(literal.value()))
+                symbolListTuple.symbol(),
+                Lists2.map(symbolListTuple.literals(), literal -> nullOrString(literal.value()))
             );
         }
         return null;
     }
+
+    private record SymbolList(Symbol symbol, List<Literal<?>> literals) {}
 }

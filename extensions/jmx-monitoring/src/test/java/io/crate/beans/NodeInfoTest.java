@@ -21,6 +21,7 @@
 
 package io.crate.beans;
 
+import static io.crate.beans.NodeInfo.ShardStateAndSize;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.test.ESTestCase.buildNewFakeTransportAddress;
 import static org.elasticsearch.test.ESTestCase.settings;
@@ -51,8 +52,6 @@ import org.junit.runner.RunWith;
 
 import com.carrotsearch.randomizedtesting.RandomizedRunner;
 import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
-
-import io.crate.common.collections.Tuple;
 
 @RunWith(RandomizedRunner.class)
 @ThreadLeakScope(ThreadLeakScope.Scope.NONE)
@@ -240,8 +239,8 @@ public class NodeInfoTest {
 
     }
 
-    Tuple<IndexShardState, Long> shardStateAndSizeProvider(ShardId shardId) {
-        return new Tuple<>(IndexShardState.STARTED, 100L);
+    ShardStateAndSize shardStateAndSizeProvider(ShardId shardId) {
+        return new ShardStateAndSize(IndexShardState.STARTED, 100L);
     }
 
     DiscoveryNode discoveryNode(String id) {

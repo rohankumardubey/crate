@@ -21,6 +21,20 @@
 
 package io.crate.planner.operators;
 
+import static io.crate.planner.operators.Limit.limitAndOffset;
+import static io.crate.planner.operators.LogicalPlanner.NO_LIMIT;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import io.crate.analyze.OrderBy;
 import io.crate.analyze.relations.AbstractTableRelation;
 import io.crate.analyze.relations.AnalyzedRelation;
@@ -28,7 +42,6 @@ import io.crate.analyze.relations.DocTableRelation;
 import io.crate.common.collections.Lists2;
 import io.crate.common.collections.Maps;
 import io.crate.common.collections.Sets;
-import io.crate.common.collections.Tuple;
 import io.crate.data.Row;
 import io.crate.execution.dsl.phases.MergePhase;
 import io.crate.execution.dsl.phases.NestedLoopPhase;
@@ -49,19 +62,6 @@ import io.crate.planner.distribution.DistributionInfo;
 import io.crate.planner.node.dql.join.Join;
 import io.crate.planner.node.dql.join.JoinType;
 import io.crate.statistics.TableStats;
-
-import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static io.crate.planner.operators.Limit.limitAndOffset;
-import static io.crate.planner.operators.LogicalPlanner.NO_LIMIT;
 
 public class NestedLoopJoin implements LogicalPlan {
 
@@ -212,7 +212,7 @@ public class NestedLoopJoin implements LogicalPlan {
             rightLogicalPlan = lhs;
             joinType = joinType.invert();
         }
-        Tuple<Collection<String>, List<MergePhase>> joinExecutionNodesAndMergePhases =
+        NodesAndMergePhases joinExecutionNodesAndMergePhases =
             configureExecution(left, right, plannerContext, isDistributed);
 
         List<Symbol> joinOutputs = Lists2.concat(leftLogicalPlan.outputs(), rightLogicalPlan.outputs());
@@ -228,11 +228,11 @@ public class NestedLoopJoin implements LogicalPlan {
             plannerContext.nextExecutionPhaseId(),
             isDistributed ? "distributed-nested-loop" : "nested-loop",
             Collections.singletonList(JoinOperations.createJoinProjection(outputs, joinOutputs)),
-            joinExecutionNodesAndMergePhases.v2().get(0),
-            joinExecutionNodesAndMergePhases.v2().get(1),
+            joinExecutionNodesAndMergePhases.mergePhases().get(0),
+            joinExecutionNodesAndMergePhases.mergePhases().get(1),
             leftLogicalPlan.outputs().size(),
             rightLogicalPlan.outputs().size(),
-            joinExecutionNodesAndMergePhases.v1(),
+            joinExecutionNodesAndMergePhases.nodes(),
             joinType,
             joinInput,
             Symbols.typeView(leftLogicalPlan.outputs()),
@@ -359,10 +359,10 @@ public class NestedLoopJoin implements LogicalPlan {
         }
     }
 
-    private Tuple<Collection<String>, List<MergePhase>> configureExecution(ExecutionPlan left,
-                                                                           ExecutionPlan right,
-                                                                           PlannerContext plannerContext,
-                                                                           boolean isDistributed) {
+    private NodesAndMergePhases configureExecution(ExecutionPlan left,
+                                                   ExecutionPlan right,
+                                                   PlannerContext plannerContext,
+                                                   boolean isDistributed) {
         Collection<String> nlExecutionNodes = Set.of(plannerContext.handlerNode());
         ResultDescription leftResultDesc = left.resultDescription();
         ResultDescription rightResultDesc = right.resultDescription();
@@ -395,7 +395,7 @@ public class NestedLoopJoin implements LogicalPlan {
                 rightMerge = JoinOperations.buildMergePhaseForJoin(plannerContext, rightResultDesc, nlExecutionNodes);
             }
         }
-        return new Tuple<>(nlExecutionNodes, Arrays.asList(leftMerge, rightMerge));
+        return new NodesAndMergePhases(nlExecutionNodes, Arrays.asList(leftMerge, rightMerge));
     }
 
     @Override
@@ -454,4 +454,6 @@ public class NestedLoopJoin implements LogicalPlan {
             ", outputs=" + outputs +
             '}';
     }
+
+    private record NodesAndMergePhases(Collection<String> nodes, List<MergePhase> mergePhases) {}
 }

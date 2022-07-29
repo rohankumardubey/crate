@@ -21,25 +21,27 @@
 
 package io.crate.protocols.http;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
+
+import org.elasticsearch.common.settings.SecureString;
+
+import io.crate.auth.Credentials;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpVersion;
-import io.crate.common.collections.Tuple;
-import org.elasticsearch.common.settings.SecureString;
-
-import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.regex.Pattern;
 
 public final class Headers {
 
     private static final Pattern USER_AGENT_BROWSER_PATTERN = Pattern.compile("(Mozilla|Chrome|Safari|Opera|Android|AppleWebKit)+?[/\\s][\\d.]+");
     private static final SecureString EMPTY_PASSWORD = new SecureString(new char[] {});
-    private static final Tuple<String, SecureString> EMPTY_CREDENTIALS_TUPLE = new Tuple<>("", EMPTY_PASSWORD);
+    private static final Credentials EMPTY_CREDENTIALS_TUPLE = new Credentials("", EMPTY_PASSWORD);
 
     static boolean isBrowser(@Nullable String headerValue) {
         if (headerValue == null) {
@@ -66,7 +68,7 @@ public final class Headers {
         }
     }
 
-    public static Tuple<String, SecureString> extractCredentialsFromHttpBasicAuthHeader(String authHeaderValue) {
+    public static Credentials extractCredentialsFromHttpBasicAuthHeader(String authHeaderValue) {
         if (authHeaderValue == null || authHeaderValue.isEmpty()) {
             return EMPTY_CREDENTIALS_TUPLE;
         }
@@ -85,6 +87,6 @@ public final class Headers {
                 password = new SecureString(passwdStr.toCharArray());
             }
         }
-        return new Tuple<>(username, password);
+        return new Credentials(username, password);
     }
 }

@@ -40,7 +40,6 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import io.crate.common.collections.Tuple;
 import org.elasticsearch.common.network.InetAddresses;
 import org.elasticsearch.common.settings.SecureString;
 import org.elasticsearch.common.settings.Settings;
@@ -91,9 +90,9 @@ public class HttpAuthUpstreamHandler extends SimpleChannelInboundHandler<Object>
 
     private void handleHttpRequest(ChannelHandlerContext ctx, HttpRequest request) {
         SSLSession session = getSession(ctx.channel());
-        Tuple<String, SecureString> credentials = credentialsFromRequest(request, session, settings);
-        String username = credentials.v1();
-        SecureString password = credentials.v2();
+        Credentials credentials = credentialsFromRequest(request, session, settings);
+        String username = credentials.username();
+        SecureString password = credentials.password();
         if (username.equals(authorizedUser)) {
             ctx.fireChannelRead(request);
             return;
@@ -161,7 +160,7 @@ public class HttpAuthUpstreamHandler extends SimpleChannelInboundHandler<Object>
     }
 
     @VisibleForTesting
-    static Tuple<String, SecureString> credentialsFromRequest(HttpRequest request, @Nullable SSLSession session, Settings settings) {
+    static Credentials credentialsFromRequest(HttpRequest request, @Nullable SSLSession session, Settings settings) {
         String username = null;
         if (request.headers().contains(HttpHeaderNames.AUTHORIZATION.toString())) {
             // Prefer Http Basic Auth
@@ -181,7 +180,7 @@ public class HttpAuthUpstreamHandler extends SimpleChannelInboundHandler<Object>
                 username = AuthSettings.AUTH_TRUST_HTTP_DEFAULT_HEADER.get(settings);
             }
         }
-        return new Tuple<>(username, null);
+        return new Credentials(username, null);
     }
 
     private InetAddress addressFromRequestOrChannel(HttpRequest request, Channel channel) {

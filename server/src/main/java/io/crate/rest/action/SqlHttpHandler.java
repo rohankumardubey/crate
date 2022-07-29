@@ -81,7 +81,6 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 public class SqlHttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static final Logger LOGGER = LogManager.getLogger(SqlHttpHandler.class);
-    private static final String REQUEST_HEADER_USER = "User";
     private static final String REQUEST_HEADER_SCHEMA = "Default-Schema";
 
     private final Settings settings;
@@ -271,7 +270,7 @@ public class SqlHttpHandler extends SimpleChannelInboundHandler<FullHttpRequest>
         final RestBulkRowCountReceiver.Result[] results = new RestBulkRowCountReceiver.Result[bulkArgs.size()];
         for (int i = 0; i < bulkArgs.size(); i++) {
             session.bind(UNNAMED, UNNAMED, bulkArgs.get(i), null);
-            ResultReceiver resultReceiver = new RestBulkRowCountReceiver(results, i);
+            ResultReceiver<?> resultReceiver = new RestBulkRowCountReceiver(results, i);
             session.execute(UNNAMED, 0, resultReceiver);
         }
         if (results.length > 0) {
@@ -296,7 +295,7 @@ public class SqlHttpHandler extends SimpleChannelInboundHandler<FullHttpRequest>
     }
 
     User userFromAuthHeader(@Nullable String authHeaderValue) {
-        String username = Headers.extractCredentialsFromHttpBasicAuthHeader(authHeaderValue).v1();
+        String username = Headers.extractCredentialsFromHttpBasicAuthHeader(authHeaderValue).username();
         // Fallback to trusted user from configuration
         if (username == null || username.isEmpty()) {
             username = AuthSettings.AUTH_TRUST_HTTP_DEFAULT_HEADER.get(settings);

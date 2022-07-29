@@ -21,7 +21,6 @@
 
 package io.crate.beans;
 
-import io.crate.common.collections.Tuple;
 import io.crate.metadata.IndexParts;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.routing.ShardRouting;
@@ -40,10 +39,10 @@ public class NodeInfo implements NodeInfoMXBean {
     public static final String NAME = "io.crate.monitoring:type=NodeInfo";
 
     private final Supplier<ClusterState> clusterState;
-    private final Function<ShardId, Tuple<IndexShardState, Long>> shardStateAndSizeProvider;
+    private final Function<ShardId, ShardStateAndSize> shardStateAndSizeProvider;
 
     public NodeInfo(Supplier<ClusterState> clusterState,
-                    Function<ShardId, Tuple<IndexShardState, Long>> shardStateAndSizeProvider) {
+                    Function<ShardId, ShardStateAndSize> shardStateAndSizeProvider) {
         this.clusterState = clusterState;
         this.shardStateAndSizeProvider = shardStateAndSizeProvider;
     }
@@ -101,8 +100,8 @@ public class NodeInfo implements NodeInfoMXBean {
                                              indexParts.getTable(),
                                              indexParts.getPartitionIdent(),
                                              shardRouting.state().name(),
-                                             shardStateAndSize.v1().name(),
-                                             shardStateAndSize.v2())
+                                             shardStateAndSize.shardState().name(),
+                                             shardStateAndSize.size())
                     );
                 }
             }
@@ -117,19 +116,21 @@ public class NodeInfo implements NodeInfoMXBean {
         return clusterState.routingTable().allShards(concreteIndices);
     }
 
-    public static class ShardStateAndSizeProvider implements Function<ShardId, Tuple<IndexShardState, Long>> {
+    public static class ShardStateAndSizeProvider implements Function<ShardId, ShardStateAndSize> {
         private final IndicesService indicesService;
 
         public ShardStateAndSizeProvider(IndicesService indicesService) {
             this.indicesService = indicesService;
         }
 
-        public Tuple<IndexShardState, Long> apply(ShardId shardId) {
+        public ShardStateAndSize apply(ShardId shardId) {
             var shard = indicesService.getShardOrNull(shardId);
             if (shard == null) {
                 return null;
             }
-            return new Tuple<>(shard.state(), shard.storeStats().getSizeInBytes());
+            return new ShardStateAndSize(shard.state(), shard.storeStats().getSizeInBytes());
         }
     }
+
+    record ShardStateAndSize(IndexShardState shardState, long size) {}
 }
