@@ -34,9 +34,9 @@ If a patch is skipped, use the ``sp:`` prefix instead.
 To see if there are new changes, you can use ``git log`` in the Elasticsearch
 repository on the 7.10 branch. For example::
 
-    git log --oneline 22ba759e1f3.. -- \
+    git log --oneline 22ba759e1f3.. --pretty=format:"- [ ] %h %s" -- \
       server/src/main/java/org/elasticsearch/index/{engine,snapshots,store,translog,shard,seqno,mapper,codec}/ \
-      server/src/main/java/org/elasticsearch/indices/recovery/ \
+      server/src/main/java/org/elasticsearch/indices/{recovery,breaker}/ \
       server/src/main/java/org/elasticsearch/cluster/coordination \
       server/src/main/java/org/elasticsearch/cluster/routing \
       server/src/main/java/org/elasticsearch/transport \
@@ -45,7 +45,8 @@ repository on the 7.10 branch. For example::
       server/src/main/java/org/elasticsearch/action/support/replication \
       server/src/main/java/org/elasticsearch/action/support/master \
       server/src/main/java/org/elasticsearch/snapshots \
-      server/src/main/java/org/elasticsearch/repositories
+      server/src/main/java/org/elasticsearch/repositories \
+      server/src/main/java/org/elasticsearch/common/breaker
 
 
 Here ``4b16d50cd4b`` is the starting point, it shows any changes since then
@@ -176,6 +177,7 @@ should be crossed out as well.
 - [ ] 66bb1eea982 Improve error messages on bad [format] and [null_value] params for date mapper (#61932)
 - [ ] 31c026f25cc upgrade to Lucene-8.7.0-snapshot-61ea26a (#61957) (#61974)
 - [ ] af01ccee93e Add specific test for serializing all mapping parameter values (#61844) (#61877)
+- [ ] 867d5f1c68a Search memory leak (#61788) (#61862)
 - [ ] d59343b4ba8 Allow [null] values in [null_value] (#61798) (#61807)
 - [ ] 3fd25bfa877 Fix Concurrent Snapshot Create+Delete + Delete Index (#61770) (#61773)
 - [ ] 5723b928d7d Remove Outdated Snapshot Docs (#61684) (#61728)
@@ -270,6 +272,7 @@ should be crossed out as well.
 - [x] 64c5f70a2d4 Remove Needless Context Switches on Loading RepositoryData (#56935) (#59452)
 - [x] bde92fc5fcc Remove Needless Context Switch From Snapshot Finalization (#56871) (#59443)
 - [x] 31be3a36452 More Efficient Snapshot State Handling (#56669) (#59430)
+- [ ] adf6083dd09 Enhance real memory circuit breaker with G1 GC (#58674) (#59394)
 - [ ] b1b7bf39122 Make data streams a basic licensed feature. (#59392)
 - [ ] bd01fd107ce Revert "Migrate CompletionFieldMapper to parametrized format (#59291)"
 - [x] 4e574a7136c Remove Dead Code from Closed Index Snapshot Logic (#56764) (#59398)
@@ -355,6 +358,7 @@ should be crossed out as well.
 - [x] 9bc9d01b841 Do not Block Snapshot Thread Pool Fully During Restore or Snapshot (#57360) (#57511)
 - [s] 7aad4f6470f Store parsed mapping settings in IndexSettings (#57492)
 - [x] 59570eaa7db Fix Local Translog Recovery not Updating Safe Commit in Edge Case (#57350) (#57380)
+- [ ] 15aba60c02c [7.x] Add new circuitbreaker plugin and refactor CircuitBreakerService (#55695) (#57359)
 - [x] e4fd78f866c Remove Overly Strict Safety Mechnism in Shard Snapshot Logic (#57227) (#57362)
 - [s] 04ef39da778 Change cluster info actions to be able to resolve data streams. (#57343)
 - [s] 75868ea915d Catch InputCoercionException thrown by Jackson parser (#57287) (#57330)
@@ -517,6 +521,7 @@ should be crossed out as well.
 - [s] 8d2261fe479 Refactor GeoShapeIndexer by extracting polygon / line decomposers (#52422) (#52506)
 - [x] 9d40277d4cb Deciders should not by default collect yes'es (#52438)
 - [s] a742c58d45d Extract a ConnectionManager interface (#51722)
+- [s] 0c4f7dc193e Minor code improvements (#51921)
 - [x] cc628748e10 Optimize FilterStreamInput for Network Reads (#52395) (#52403)
 - [s] 146def8caad Implement top_metrics agg (#51155) (#52366)
 - [s] 7efce22f19d Fix a DST error in date_histogram (backport #52016) (#52237)
@@ -536,6 +541,7 @@ should be crossed out as well.
 - [x] 39a3a950de0 Simplify rebalancer's weight function (#51632)
 - [x] 27c15d6ccd4 Fix InternalEngineTests.testSeqNoAndCheckpoints (#51630) (#51672)
 - [s] 86f3b47299b Make `date_range` query rounding consistent with `date` (#50237) (#51741) // no date_range
+- [s] 915a931e93d Bucket aggregation circuit breaker optimization. (#46751) (#51730)
 - [x] 72ae0ca73fe Log exceptions in TcpTransport at DEBUG level (#51612)
 - [x] 1064009e9d9 Allow Parallel Snapshot Restore And Delete (#51608) (#51666)
 - [s] aae93a75780 Allow Repository Plugins to Filter Metadata on Create (#51472) (#51542) // we haven't added userMetaData yet
