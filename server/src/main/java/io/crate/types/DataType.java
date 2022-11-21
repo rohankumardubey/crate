@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import org.apache.lucene.util.Accountable;
+import org.apache.lucene.document.FieldType;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.io.stream.Writeable;
 
@@ -233,6 +234,7 @@ public abstract class DataType<T> implements Comparable<DataType<?>>, Writeable,
     @Nullable
     public ValueIndexer<T> valueIndexer(RelationName table,
                                         Reference ref,
+                                        Function<ColumnIdent, FieldType> getFieldType,
                                         Function<ColumnIdent, Reference> getRef) {
         return null;
     }
