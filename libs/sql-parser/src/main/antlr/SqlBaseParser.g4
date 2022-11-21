@@ -404,8 +404,13 @@ escapedCharsStringLiteral
     : ESCAPED_STRING
     ;
 
+dollarQuotedStringLiteral
+    : BEGIN_DOLLAR_QUOTED_STRING DOLLAR_QUOTED_STRING_BODY* END_DOLLAR_QUOTED_STRING
+    ;
+
 stringLiteral
     : STRING
+    | dollarQuotedStringLiteral
     ;
 
 bitString
