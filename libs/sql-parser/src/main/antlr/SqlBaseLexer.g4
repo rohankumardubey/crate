@@ -437,10 +437,10 @@ UNRECOGNIZED
 mode DollarQuotedStringMode;
 DOLLAR_QUOTED_STRING_BODY
    : ~ '$'+
-   //| '$'([0-9])+
-   | // this alternative improves the efficiency of handling $ characters within a dollar-quoted string which are
+   // | '$'([0-9])+
+   // this alternative improves the efficiency of handling $ characters within a dollar-quoted string which are
    // not part of the ending tag.
-   '$' ~ '$'*
+   | '$' ~ '$'*
    ;
 
 END_DOLLAR_QUOTED_STRING

@@ -514,10 +514,10 @@ public class TestSqlParser {
 
     @Test
     public void test_dollar_quoted_strings_with_valid_tags() {
-        assertThat(((StringLiteral) SqlParser.createExpression("$$$$")).getValue()).isEqualTo("");
+        assertThat(((StringLiteral) SqlParser.createExpression("$$$$")).getValue()).isEmpty();
         assertThat(((StringLiteral) SqlParser.createExpression("$a$ a$a $a$")).getValue()).isEqualTo(" a$a ");
-        assertThat(((StringLiteral) SqlParser.createExpression("$a$$a$")).getValue()).isEqualTo("");
-        assertThat(((StringLiteral) SqlParser.createExpression("$_$$_$")).getValue()).isEqualTo("");
+        assertThat(((StringLiteral) SqlParser.createExpression("$a$$a$")).getValue()).isEmpty();
+        assertThat(((StringLiteral) SqlParser.createExpression("$_$$_$")).getValue()).isEmpty();
         assertThat(((StringLiteral) SqlParser.createExpression("$_$string, content,\n!@#$_$")).getValue()).isEqualTo("string, content,\n!@#");
     }
 
@@ -553,6 +553,24 @@ public class TestSqlParser {
             () -> SqlParser.createExpression("$a$$b$"))
             .isInstanceOf(ParsingException.class)
             .hasMessageStartingWith("line 1:7: extraneous input '<EOF>' expecting {DOLLAR_QUOTED_STRING_BODY, END_DOLLAR_QUOTED_STRING}");
+    }
+
+    @Test
+    public void test_create_function_with_dollar_quoted_strings() {
+        var createFunction = SqlParser.createStatement(
+            """
+                CREATE FUNCTION isbn_to_title(text) RETURNS text LANGUAGE sql
+                AS $$SELECT title from books where isbn = $1$$;
+                """
+        );
+        var expected = SqlParser.createStatement(
+            """
+                CREATE FUNCTION isbn_to_title(text) RETURNS text LANGUAGE sql
+                AS 'SELECT title from books where isbn = $1';
+                """
+        );
+        // CreateFunction.equals() does not compare the definitions
+        assertThat(createFunction.toString()).isEqualTo(expected.toString());
     }
 
     private static void assertStatement(String query, Statement expected) {
