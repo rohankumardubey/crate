@@ -540,19 +540,19 @@ public class TestSqlParser {
         assertThatThrownBy(
             () -> SqlParser.createExpression("$a$a$a$a$")) // tokenize as $a$ | a | $a$ then the next 'a' is mismatched
             .isInstanceOf(ParsingException.class)
-            .hasMessageStartingWith("line 1:8: mismatched input 'a' expecting");
+            .hasMessageStartingWith("line 1:8: mismatched input 'a' expecting {");
         assertThatThrownBy(
             () -> SqlParser.createExpression("$$$$$$"))
             .isInstanceOf(ParsingException.class)
-            .hasMessageStartingWith("line 1:5: extraneous input '$$' expecting");
+            .hasMessageStartingWith("line 1:5: extraneous input '$$' expecting <EOF>");
         assertThatThrownBy(
             () -> SqlParser.createExpression("$1$$1$")) // $1$ is an invalid tag
             .isInstanceOf(ParsingException.class)
-            .hasMessageStartingWith("line 1:3: mismatched input '$$' expecting");
+            .hasMessageStartingWith("line 1:3: mismatched input '$$' expecting {<EOF>, ");
         assertThatThrownBy(
             () -> SqlParser.createExpression("$a$$b$"))
             .isInstanceOf(ParsingException.class)
-            .hasMessageStartingWith("line 1:7: extraneous input '<EOF>' expecting {DOLLAR_QUOTED_STRING_BODY, END_DOLLAR_QUOTED_STRING}");
+            .hasMessageStartingWith("line 1:7: extraneous input '<EOF>' expecting {<dollar quoted string>, <end of dollar tag>}");
     }
 
     @Test
