@@ -31,6 +31,7 @@ import static io.crate.testing.SQLErrorMatcher.isSQLError;
 import static io.crate.testing.TestingHelpers.printedTable;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONFLICT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -41,7 +42,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +58,7 @@ import com.carrotsearch.randomizedtesting.annotations.Repeat;
 
 import io.crate.common.collections.MapBuilder;
 import io.crate.exceptions.VersioningValidationException;
+import io.crate.testing.Asserts;
 import io.crate.testing.SQLResponse;
 import io.crate.testing.UseJdbc;
 
@@ -1452,6 +1453,8 @@ public class InsertIntoIntegrationTest extends IntegTestCase {
                 "partitioned by (country) " +
                 "clustered into 1 shards");
 
+        execute("select * from tsrc");
+        Asserts.assertThat(response).hasRowCount(1);
         execute("insert into tdst (country, name) (select country, name from tsrc)");
         assertThat(response.rowCount(), is(1L));
     }
