@@ -422,7 +422,7 @@ public class PushDownTest extends CrateDummyClusterServiceUnitTest {
     @Test
     public void test_filter_on_correlated_join_input_is_pushed_beneath_join() {
         var plan = sqlExecutor.logicalPlan(
-        """
+            """
             SELECT a.mountain
             FROM sys.summits a
             WHERE
@@ -435,19 +435,18 @@ public class PushDownTest extends CrateDummyClusterServiceUnitTest {
                 )
                 AND
                 a.country = 'DE'
-        """);
+            """);
         var expectedPlan =
-        """
-        Eval[mountain]
-          └ Filter[EXISTS (SELECT 1 FROM (b))]
-            └ CorrelatedJoin[mountain, height, (SELECT 1 FROM (b))]
-              └ Rename[mountain, height] AS a
-                └ Collect[sys.summits | [mountain, height] | (country = 'DE')]
-              └ SubPlan
-                └ Eval[1]
-                  └ Rename[1, height] AS b
-                    └ Limit[1;0]
-                      └ Collect[sys.summits | [1, height] | (height = height)]""";
+            "Eval[mountain]\n" +
+            "  └ Filter[EXISTS (SELECT 1 FROM (b))]\n" +
+            "    └ CorrelatedJoin[mountain, height, (SELECT 1 FROM (b))]\n" +
+            "      └ Rename[mountain, height] AS a\n" +
+            "        └ Collect[sys.summits | [mountain, height] | (country = 'DE')]\n" +
+            "      └ SubPlan\n" +
+            "        └ Eval[1]\n" +
+            "          └ Rename[1, height] AS b\n" +
+            "            └ Limit[1;0]\n" +
+            "              └ Collect[sys.summits | [1, height] | (height = height)]";
         assertThat(plan,isPlan(expectedPlan));
     }
 }
