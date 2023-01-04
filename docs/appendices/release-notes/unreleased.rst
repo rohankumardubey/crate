@@ -146,9 +146,9 @@ Changes
 - Added support for dollar quoted strings,
   see :ref:`String Literal <string_literal>` for further details.
 
-- Added a :ref:`datestyle <conf-session-datestyle>` session setting that shows 
-  the display format for date and time values. Only the ``ISO`` style is 
-  supported. Optionally provided pattern conventions for the order of date 
+- Added a :ref:`datestyle <conf-session-datestyle>` session setting that shows
+  the display format for date and time values. Only the ``ISO`` style is
+  supported. Optionally provided pattern conventions for the order of date
   parts (Day, Month, Year) are ignored.
 
 - Added support for adding multiple columns in a single
@@ -159,12 +159,12 @@ Changes
   first level properties, taking the second object's values for duplicate
   properties.
 
-- Added the :ref:`parse_uri(text) <scalar-parse_uri>` scalar function which 
-  parses a valid URI string into an ``object`` containing the URI components, 
+- Added the :ref:`parse_uri(text) <scalar-parse_uri>` scalar function which
+  parses a valid URI string into an ``object`` containing the URI components,
   making it easier to query them.
 
 - Added the :ref:`parse_url(text) <scalar-parse_url>` scalar function which
-  parses a valid URL string into an ``object`` containing the URL components, 
+  parses a valid URL string into an ``object`` containing the URL components,
   including parsed query parameters, making it easier to query them.
 
 Fixes
@@ -205,3 +205,15 @@ Fixes
   consume invalid table names provided in a double-quoted string format
   containing ``.`` such as ``"table.t"`` by mis-interpreting it as
   ``"table"."t"``, which is a two double-quoted strings joined by a ``.``.
+
+- Fixed an issue with correlated sub-queries which caused a planner error when
+  using a filter on a top level relation column which isn't included in the
+  select item list. An example::
+
+    SELECT name
+    FROM cities
+    WHERE EXISTS (
+        SELECT 1 FROM countries WHERE countries.name = cities.country
+    ) AND cities.population > 100000;
+
+
