@@ -27,6 +27,7 @@ import java.util.Set;
 import io.crate.expression.symbol.DefaultTraversalSymbolVisitor;
 import io.crate.expression.symbol.MatchPredicate;
 import io.crate.expression.symbol.ScopedSymbol;
+import io.crate.expression.symbol.SelectSymbol;
 import io.crate.expression.symbol.Symbol;
 import io.crate.metadata.Reference;
 import io.crate.metadata.RelationName;
@@ -57,6 +58,14 @@ public class RelationNameCollector extends DefaultTraversalSymbolVisitor<Set<Rel
     public Void visitMatchPredicate(MatchPredicate matchPredicate, Set<RelationName> context) {
         for (Symbol field : matchPredicate.identBoostMap().keySet()) {
             field.accept(this, context);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitSelectSymbol(SelectSymbol selectSymbol, Set<RelationName> context) {
+        if (selectSymbol.isCorrelated()) {
+            context.clear();
         }
         return null;
     }
