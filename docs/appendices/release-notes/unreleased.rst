@@ -77,3 +77,6 @@ Fixes
 
 - Improved error message when :ref:`fetching <sql-fetch>` using ``ABSOLUTE``,
   past the last row returned by the cursor query.
+
+- Fixed and issue that caused wrong or 0 rows to be returned when trying to
+  fetch all rows backwards from a ``CURSOR`` using: ``FETCH BACKWARDS ALL``.
